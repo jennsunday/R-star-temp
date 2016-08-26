@@ -8,6 +8,8 @@ data<-read.csv(file="./data/gapminder_2007.csv")
 #load functions####
 source(file = "./scripts/functions.R")
 
+## Hi Jenn!!!!!!
+
 #process data####
 cv(data$gdpPercap)
 
