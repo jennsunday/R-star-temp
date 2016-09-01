@@ -19,14 +19,16 @@ fnams <- list.files("/Users/Joey/Documents/R-star/flowcam-summaries-160826", ful
 Aug_26 <- fnams %>% 
 	lapply(FUN = function(p) read.csv(p)) %>%
 	as.data.frame(.) %>% 
-dplyr::filter(List.File == "Particles / ml") %>% 
+	mutate(List.File = as.character(List.File)) %>% 
+dplyr::filter(List.File == "Particles / ml" | List.File == "Start Time") %>% 
 	select(- starts_with("List")) %>%
 	t(.) %>%
 	as.data.frame() %>% 
 	mutate(dataset = rownames(.)) %>%
-	mutate(cell_count = as.numeric(as.character(V1))) %>%
-	# mutate(biovolume = as.numeric(as.character(V2))) %>% 
-	select(-V1) 
+	mutate(start_time = as.character(V1)) %>%
+	mutate(cell_count = as.numeric(as.character(V2))) %>%
+	select(-V1) %>% 
+	select(-V2)
 
 
 Rstar_sep_aug26 <- separate(Aug_26, dataset, c("species", "replicate"), sep = 2) %>%
@@ -41,4 +43,4 @@ write.csv(Rstar_sep_aug26, "data-processed/cell_count_Aug26.csv")
 
 #### Step 5: plot it!
 
-ggplot(data = Rstar_sep, aes(x = temperature, y = cell_count, group = species, color = species)) + geom_point()
+ggplot(data = Rstar_sep, aes(x = temperature, y = cell_count, group = species, color = species)) + geom_point(size = 4)
