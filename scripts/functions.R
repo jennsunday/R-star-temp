@@ -1,1 +1,0 @@
-cv<-function(x){return(sd(x)/mean(x))}
