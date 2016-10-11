@@ -9,15 +9,13 @@ Rstar_int<-read.csv("data-processed/cell_count_init.csv") #dummy initial time da
 head(Rstar_int)
 str(Rstar_int)
 
-
-min(Rstar_Augexpt$start_time)
 #### Step 2: make date and time into readable time #### 
 str(Rstar_Augexpt)
 Rstar_Augexpt$start_time<-ymd_hms(Rstar_Augexpt$start_time)
 Rstar_int$start_time<-ymd_hms(Rstar_int$start_time)
 
+#### Step 3: merge real data with dummy initial data #### 
 Rstar_Augexpt<-rbind(Rstar_Augexpt, Rstar_int)
-
 
 #### Step 3: plot it ####
 min(Rstar_Augexpt$start_time)
