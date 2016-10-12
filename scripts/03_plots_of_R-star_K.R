@@ -25,7 +25,8 @@ Rstar_expt25<-subset(Rstar_expt, Rstar_expt$temperature==25)
 Rstar_expt30<-subset(Rstar_expt, Rstar_expt$temperature==30)
 
 
-#### Step 3: plot growth for both species by temperature####
+#### Step 3: plot growth and nitrate for both species by temperature####
+
 par(mfrow=c(2,4))
 with(Rstar_expt10, plot(log(cell_count)~start_time, type="n", main="10", ylab="", xlab="", ylim=c(0, 14)))
 with(subset(Rstar_expt10, Rstar_expt10$species=="CH"), points(log(cell_count)~start_time, col=1))

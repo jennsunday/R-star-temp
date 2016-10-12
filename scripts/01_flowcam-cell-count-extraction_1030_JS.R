@@ -25,7 +25,9 @@ list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/10_and_3
 list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/10_and_30_expt/flowcam_summaries_160923", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
 list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/10_and_30_expt/flowcam_summaries_160927", full.names = TRUE),
 list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/10_and_30_expt/flowcam_summaries_160930", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
-list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/10_and_30_expt/flowcam_summaries_161004", full.names = TRUE)) ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
+list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/10_and_30_expt/flowcam_summaries_161004", full.names = TRUE),
+list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/10_and_30_expt/flowcam_summaries_161007", full.names = TRUE),
+list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/10_and_30_expt/flowcam_summaries_161011", full.names = TRUE)) ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
  ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
 
 
