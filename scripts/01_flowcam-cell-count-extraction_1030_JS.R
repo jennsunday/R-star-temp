@@ -39,16 +39,18 @@ list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/10_and_3
 Septexpt <- fnams %>% 
 	lapply(FUN = function(p) read.csv(p)) %>% 
 	as.data.frame(.) %>% 
-	mutate(List.File = as.character(List.File)) %>%
-dplyr::filter(List.File == "Particles / ml" | List.File == "Start Time") %>%
+	mutate(List.File = as.character(List.File)) %>% 
+dplyr::filter(List.File == "Particles / ml" | List.File == "Start Time" | List.File == "Volume (ABD)") %>% 
 	select(- starts_with("List")) %>%
 	t(.) %>% 
 	as.data.frame() %>% 
 	mutate(dataset = rownames(.)) %>% 
 	mutate(start_time = as.character(V1)) %>%
 	mutate(cell_count = as.numeric(as.character(V2))) %>% 
+  mutate(volume = as.numeric(as.character(V3))) %>% 
 	select(-V1) %>% 
-	select(-V2)
+	select(-V2) %>% 
+  select(-V3)
 
 ######
 #still need to correct some names and clean this up
@@ -78,6 +80,12 @@ write.csv(Rstar_Septexpt, "data-processed/cellcount_Septexpt.csv")
 
 #### Step 5: plot it!
 #ggplot(data = Rstar_Septexpt, aes(x = temperature, y = cell_count, group = species, color = species)) + geom_point(size = 4)
+
+par(mfrow=c(1,1))
+plot(log(Rstar_Septexpt$volume)~Rstar_Septexpt$start_time, type="n", main="TT", xlim=c())
+with(subset(Rstar_Septexpt, Rstar_Septexpt$species=="TT"& Rstar_Septexpt$temperature==10), points(log(volume)~start_time, col=1))
+with(subset(Rstar_Septexpt, Rstar_Septexpt$species=="TT"& Rstar_Septexpt$temperature==30), points(log(volume)~start_time, col=2))
+legend("topleft", pch=1, col=c(1,2), c("16°C", "25°C"))
 
 par(mfrow=c(1,3))
 plot(log(Rstar_Septexpt$cell_count)~Rstar_Septexpt$start_time, type="n", main="TT", xlim=c())
