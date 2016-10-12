@@ -26,7 +26,7 @@ Rstar_expt30<-subset(Rstar_expt, Rstar_expt$temperature==30)
 
 
 #### Step 3: plot growth and nitrate for both species by temperature####
-
+#pdf(file="./figures/Growth_and_nitrate_across_time_and_temp.pdf", width = 8, height = 6)
 par(mfrow=c(2,4))
 with(Rstar_expt10, plot(log(cell_count)~start_time, type="n", main="10", ylab="", xlab="", ylim=c(0, 14)))
 with(subset(Rstar_expt10, Rstar_expt10$species=="CH"), points(log(cell_count)~start_time, col=1))
@@ -55,7 +55,7 @@ mtext("Time", 1,3)
 
 
 #
-#
+#add nitrate data
 #
 
 with(nitratedata10, plot(abs~date_N_assay, type="n", ylab="", xlab="", ylim=c(0, 0.2)))
@@ -81,6 +81,8 @@ with(subset(nitratedata30, nitratedata30$species=="CH"), points(abs~date_N_assay
 with(subset(nitratedata30, nitratedata30$species=="TT"), points(abs~date_N_assay, col=2, pch=2))
 mtext(side = 2, line = 3, 'Nitrate')
 mtext("Time", 1,3)
+#dev.off()
+
 
 #### Step 3: plot growth AND nitrate for both species by temperature####
 par(mfrow=c(1,4))
