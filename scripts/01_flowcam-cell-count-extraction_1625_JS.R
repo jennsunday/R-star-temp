@@ -10,6 +10,8 @@ library(lubridate)
 #move summary folders to the summary-only folder
 #read in the rest of data
 
+#need to change name in each file to make sure coded correctly - e.g. B161, 16TT1, etc. also that name in file matches name of file
+
 #### Step 1 #### 
 
 ## in the shell, use this command to copy the summary files from the folder of flow cam run folders to a summary-only file
@@ -19,7 +21,8 @@ library(lubridate)
 
 
 #### Step 2: create a list of file names for each of the summaries ####
-fnams<- c(list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/16_and_25_expts/flowcam_summaries_160816", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
+fnams<- c(list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/16_and_25_expts/flowcam_summaries_160812", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
+list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/16_and_25_expts/flowcam_summaries_160816", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
 list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/16_and_25_expts/flowcam_summaries_160819", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
 list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/16_and_25_expts/flowcam_summaries_160823", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
 list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/16_and_25_expts/flowcam_summaries_160826", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
