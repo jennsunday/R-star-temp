@@ -98,23 +98,25 @@ dev.off()
 #
 # size data
 #
-with(Rstar_expt10, plot(log(volume)~start_time, type="n", main="10", ylab="", xlab="", ylim=c(0, 14)))
-with(subset(Rstar_expt10, Rstar_expt10$species=="CH"), points(log(volume)~start_time, col=1))
-with(subset(Rstar_expt10, Rstar_expt10$species=="TT"), points(log(volume)~start_time, col=2))
+par(mfrow=c(1,4))
+par(mar=c(3,3,0.5, 0.5), oma=c(0,0,0,0))
+with(Rstar_expt10, plot((volume)~start_time, type="n", main="10", ylab="", xlab="", ylim=c(0, 1500)))
+with(subset(Rstar_expt10, Rstar_expt10$species=="CH"), points((volume)~start_time, col=1))
+with(subset(Rstar_expt10, Rstar_expt10$species=="TT"), points((volume)~start_time, col=2))
 mtext(side = 2, line = 2, 'log cell size')
-legend("bottomleft", pch=1, col=c(1,2), c("CH", "TT"))
+legend("topright", pch=1, col=c(1,2), c("CH", "TT"))
 
-with(Rstar_expt16, plot(log(volume)~start_time, ylab="", xlab="", type="n", main="16", ylim=c(1, 14)))
-with(subset(Rstar_expt16, Rstar_expt16$species=="CH"), points(log(volume)~start_time, col=1))
-with(subset(Rstar_expt16, Rstar_expt16$species=="TT"), points(log(volume)~start_time, col=2))
+with(Rstar_expt16, plot((volume)~start_time, ylab="", xlab="", type="n", main="16", ylim=c(0, 1500)))
+with(subset(Rstar_expt16, Rstar_expt16$species=="CH"), points((volume)~start_time, col=1))
+with(subset(Rstar_expt16, Rstar_expt16$species=="TT"), points((volume)~start_time, col=2))
 
-with(Rstar_expt25, plot(log(volume)~start_time, ylab="", xlab="", type="n", main="25", ylim=c(1, 14)))
-with(subset(Rstar_expt25, Rstar_expt25$species=="CH"), points(log(volume)~start_time, col=1))
-with(subset(Rstar_expt25, Rstar_expt25$species=="TT"), points(log(volume)~start_time, col=2))
+with(Rstar_expt25, plot((volume)~start_time, ylab="", xlab="", type="n", main="25", ylim=c(0, 1500)))
+with(subset(Rstar_expt25, Rstar_expt25$species=="CH"), points((volume)~start_time, col=1))
+with(subset(Rstar_expt25, Rstar_expt25$species=="TT"), points((volume)~start_time, col=2))
 
-with(Rstar_expt30, plot(log(volume)~start_time, ylab="", xlab="", type="n", main="30", ylim=c(1, 14)))
-with(subset(Rstar_expt30, Rstar_expt30$species=="CH"), points(log(volume)~start_time, col=1))
-with(subset(Rstar_expt30, Rstar_expt30$species=="TT"), points(log(volume)~start_time, col=2))
+with(Rstar_expt30, plot((volume)~start_time, ylab="", xlab="", type="n", main="30", ylim=c(0, 1500)))
+with(subset(Rstar_expt30, Rstar_expt30$species=="CH"), points((volume)~start_time, col=1))
+with(subset(Rstar_expt30, Rstar_expt30$species=="TT"), points((volume)~start_time, col=2))
 
 #### Step 3: plot growth AND nitrate for both species by temperature####
 par(mfrow=c(1,4))
