@@ -14,8 +14,9 @@ str(Rstar_int)
 str(Rstar_Augexpt)
 Rstar_Augexpt$start_time<-ymd_hms(Rstar_Augexpt$start_time)
 Rstar_Septexpt$start_time<-ymd_hms(Rstar_Septexpt$start_time)
-Rstar_int$start_time<-ymd_hm (Rstar_int$start_time)
+#Rstar_int$start_time<-ymd_hm (Rstar_int$start_time)
 
+head(Rstar_Septexpt)
 #### Step 3: merge datasets and dummy initial data #### 
 Rstar_expt<-rbind(Rstar_Augexpt, Rstar_Septexpt) #leave out initial as I want to plot biovolume
 #Rstar_expt<-rbind(Rstar_Augexpt, Rstar_Septexpt, Rstar_int)

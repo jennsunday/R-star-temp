@@ -62,6 +62,9 @@ Rstar_Septexpt <- separate(Septexpt, dataset, c("species", "replicate"), sep = 2
 	separate(., replicate, c("replicate", "file"), sep = 1) %>% 
 	select(-file)
 
+#### Unite columns to make a unique ID####
+Rstar_Septexpt <- Rstar_Septexpt %>%
+  unite(unique_ID, species, temperature, replicate, remove = FALSE) 
 
 #make date and time into readable time
 str(Rstar_Septexpt)

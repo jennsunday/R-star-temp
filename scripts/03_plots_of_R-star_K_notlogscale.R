@@ -16,6 +16,7 @@ Rstar_Augexpt$start_time<-ymd_hms(Rstar_Augexpt$start_time)
 Rstar_Septexpt$start_time<-ymd_hms(Rstar_Septexpt$start_time)
 Rstar_int$start_time<-ymd_hm (Rstar_int$start_time)
 
+
 #### Step 3: merge datasets and dummy initial data #### 
 Rstar_expt<-rbind(Rstar_Augexpt, Rstar_Septexpt) #leave out initial as I want to plot biovolume
 #Rstar_expt<-rbind(Rstar_Augexpt, Rstar_Septexpt, Rstar_int)
@@ -119,7 +120,6 @@ with(Rstar_expt25, plot((volume)~start_time, ylab="", xlab="", type="n", main="2
 with(subset(Rstar_expt25, Rstar_expt25$species=="CH"), points((volume)~start_time, col=1))
 with(subset(Rstar_expt25, Rstar_expt25$species=="TT"), points((volume)~start_time, col=2))
 with(subset(Rstar_expt25, Rstar_expt25$species=="BB"), points((volume)~start_time, col=3))
-
 
 with(Rstar_expt30, plot((volume)~start_time, ylab="", xlab="", type="n", main="30", ylim=c(0, 1500)))
 with(subset(Rstar_expt30, Rstar_expt30$species=="CH"), points((volume)~start_time, col=1))
