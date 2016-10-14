@@ -21,22 +21,22 @@ library(lubridate)
 
 
 #### Step 2: create a list of file names for each of the summaries ####
-fnams<- c(list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/16_and_25_expts/flowcam_summaries_160812", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
-list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/16_and_25_expts/flowcam_summaries_160816", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
-list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/16_and_25_expts/flowcam_summaries_160819", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
-list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/16_and_25_expts/flowcam_summaries_160823", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
-list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/16_and_25_expts/flowcam_summaries_160826", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
-list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/16_and_25_expts/flowcam_summaries_160830", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
-list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/16_and_25_expts/flowcam_summaries_160902", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
-list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/16_and_25_expts/flowcam_summaries_160906", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
-list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/16_and_25_expts/flowcam_summaries_160909", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
-list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/16_and_25_expts/flowcam_summaries_160913", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
-list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/16_and_25_expts/flowcam_summaries_160916", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
-list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/16_and_25_expts/flowcam_summaries_160920", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
-list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/16_and_25_expts/flowcam_summaries_160923", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
-list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/16_and_25_expts/flowcam_summaries_160927", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
-list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/16_and_25_expts/flowcam_summaries_160930", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
-list.files("/Users/Jennifer_Sunday/Documents/R-star/cell_concentrations/16_and_25_expts/flowcam_summaries_161004", full.names = TRUE)) ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
+fnams<- c(list.files("./data/cell_concentrations/16_and_25/flowcam_summaries_160812", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
+list.files("./data/cell_concentrations/16_and_25/flowcam_summaries_160816", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
+list.files("./data/cell_concentrations/16_and_25/flowcam_summaries_160819", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
+list.files("./data/cell_concentrations/16_and_25/flowcam_summaries_160823", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
+list.files("./data/cell_concentrations/16_and_25/flowcam_summaries_160826", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
+list.files("./data/cell_concentrations/16_and_25/flowcam_summaries_160830", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
+list.files("./data/cell_concentrations/16_and_25/flowcam_summaries_160902", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
+list.files("./data/cell_concentrations/16_and_25/flowcam_summaries_160906", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
+list.files("./data/cell_concentrations/16_and_25/flowcam_summaries_160909", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
+list.files("./data/cell_concentrations/16_and_25/flowcam_summaries_160913", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
+list.files("./data/cell_concentrations/16_and_25/flowcam_summaries_160916", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
+list.files("./data/cell_concentrations/16_and_25/flowcam_summaries_160920", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
+list.files("./data/cell_concentrations/16_and_25/flowcam_summaries_160923", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
+list.files("./data/cell_concentrations/16_and_25/flowcam_summaries_160927", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
+list.files("./data/cell_concentrations/16_and_25/flowcam_summaries_160930", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
+list.files("./data/cell_concentrations/16_and_25/flowcam_summaries_161004", full.names = TRUE)) ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
 
 
 
@@ -71,7 +71,7 @@ Rstar_Augexpt <- separate(Augexpt, dataset, c("species", "replicate"), sep = 2) 
 	separate(., replicate, c("replicate", "file"), sep = 1) %>% 
 	select(-file)
 
-
+head(Augexpt)
 #make date and time into readable time
 str(Rstar_Augexpt)
 Rstar_Augexpt$start_time<-ymd_hms(Rstar_Augexpt$start_time)
@@ -104,7 +104,7 @@ with(subset(Rstar_Septexpt, Rstar_Septexpt$species=="TT"& Rstar_Septexpt$tempera
 legend("topleft", pch=1, col=c(1,2), c("16°C", "25°C"))
 
 
-par(mfrow=c(1,2))
+par(mfrow=c(1,3))
 plot((Rstar_Augexpt$cell_count)~Rstar_Augexpt$start_time, type="n", main="TT", xlim=c())
 with(subset(Rstar_Augexpt, Rstar_Augexpt$species=="TT"& Rstar_Augexpt$temperature==16), points((cell_count)~start_time, col=1))
 with(subset(Rstar_Augexpt, Rstar_Augexpt$species=="TT"& Rstar_Augexpt$temperature==25), points((cell_count)~start_time, col=2))
