@@ -64,4 +64,6 @@ for(i in 1:length(levels(standards$date_N_assay))){
 
 nitratesamples<-filter(nitratesamples, !is.na(nitratesamples$nitrate))
 
+#### Step 4: write out the df to a csv ####
+write.csv(nitratesamples, "data-processed/nitratesamples.csv")
 
