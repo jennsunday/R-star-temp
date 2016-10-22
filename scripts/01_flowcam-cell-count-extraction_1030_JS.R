@@ -27,7 +27,10 @@ list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_160927", fu
 list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_160930", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
 list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_161004", full.names = TRUE),
 list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_161007", full.names = TRUE),
-list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_161011", full.names = TRUE)) ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
+list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_161011", full.names = TRUE),
+list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_161014", full.names = TRUE),
+list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_161018", full.names = TRUE)) ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
+## find out the names of all the files in data-summary, use full.names to get the relative path for each file
  ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
 
 #sometimes encounter an error in the following script if some csvs are not correct length, due to csv saving with extra commas (not sure why that occurs)

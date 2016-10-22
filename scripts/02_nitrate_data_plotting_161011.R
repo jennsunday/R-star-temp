@@ -23,6 +23,7 @@ nitratedata30<-subset(nitratedata, nitratedata$temp==30)
 mediumnitrate<-subset(nitratedata, nitratedata$species=="Medium")
 init.nitrate<-subset(nitratedata, nitratedata$species=="Medium" & nitratedata$date_N_assay=="2016-08-18")
 
+mean(mediumnitrate$nitrate)
 
 plot(mediumnitrate$abs~mediumnitrate$date_N_assay)
 #### Step 3: plot nitrate for both species by temperature####
