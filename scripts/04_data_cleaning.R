@@ -9,6 +9,7 @@ library(tidyverse)
 library(stringr)
 library(plotrix)
 library(lubridate)
+library(gridExtra)
 
 
 
@@ -33,23 +34,33 @@ unique(data$species)
 
 # separate the date-time column into a date only col ----------------------
 
-data2 <- data1 %>% 
+aug_data2 <- data1 %>% 
 	separate(start_time, into = c("date", "time"), sep = " ", remove = FALSE) %>% 
 	mutate(date_formatted = ymd(date))
+
+
+aug_data2$innoc.time <- ymd_hms("2016-08-12 14:23:57")
+aug_data2$time_since_innoc <- interval(aug_data2$innoc.time, aug_data2$start_time)
+aug_data2 <- aug_data2 %>% 
+	mutate(time_since_innoc_days = time_since_innoc/ddays(1)) %>% 
+	mutate(time_since_innoc_hours = time_since_innoc/dhours(1))
+
 
 
 
 # plot the mean and std error over time -----------------------------------
 
 
-data2 %>% 
-	group_by(species, date_formatted, temperature) %>% 
-	summarise_each(funs(mean, std.error), cell_count) %>%  
+aug_plot <- aug_data2 %>% 
+	group_by(species, replicate, temperature) %>% 
+	# summarise_each(funs(mean, std.error), cell_count) %>%  
 	filter(species != "CO") %>% 
-	ggplot(data = ., aes(x = date_formatted, y = mean, color = species)) + geom_point(size = 2) + 
-	geom_errorbar(aes(ymax = mean + std.error, ymin = mean - std.error)) +
-	geom_line() +
+	ggplot(data = ., aes(x = time_since_innoc_hours, y = cell_count, color = species)) + geom_point(size = 2) + 
+	# geom_errorbar(aes(ymax = mean + std.error, ymin = mean - std.error)) +
+	# geom_line() +
 				 	facet_wrap( ~ temperature) +
 	xlab("sample date") +
-	ylab("mean cell count") + theme_minimal()
+	ylab("mean cell count") + theme_minimal() + ylim(0, 3*10^5) + xlim(0, 1500)
 	
+
+grid.arrange(aug_plot, sept_plot, ncol = 2)
