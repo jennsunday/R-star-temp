@@ -19,7 +19,8 @@ library(lubridate)
 
 
 #### Step 2: create a list of file names for each of the summaries ####
-fnams<- c(list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_160913", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
+fnams<- c(list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_160913", full.names = TRUE))
+, ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
 list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_160916", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
 list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_160920", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
 list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_160923", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
@@ -29,7 +30,10 @@ list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_161004", fu
 list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_161007", full.names = TRUE),
 list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_161011", full.names = TRUE),
 list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_161014", full.names = TRUE),
-list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_161018", full.names = TRUE)) ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
+list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_161018", full.names = TRUE),
+list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_161025", full.names = TRUE),
+list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_161028", full.names = TRUE)) ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
+## find out the names of all the files in data-summary, use full.names to get the relative path for each file
 ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
  ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
 
