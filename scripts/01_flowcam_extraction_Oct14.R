@@ -18,12 +18,14 @@ library(lubridate)
 
 
 #### Step 2: create a list of file names for each of the summaries ####
-fnams <- list.files("/Users/Joey/Documents/R-star/flowcam-summaries-161014", full.names = TRUE) ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
+fnams <- c(list.files("/Users/Joey/Documents/R-star/flowcam-summaries-161014", full.names = TRUE),
+					 list.files("/Users/Joey/Documents/R-star/flowcam-summaries-161021", full.names = TRUE))
+					 ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
 ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
 fnams
 
 #### Step 3: create a df with the dataset ID and the cell count ####
-Oct_14 <- fnams %>% 
+Oct_21 <- fnams %>% 
 	lapply(FUN = function(p) read.csv(p)) %>% 
 	as.data.frame(.) %>% 
 	mutate(List.File = as.character(List.File)) %>% 
@@ -44,18 +46,18 @@ Oct_14 <- fnams %>%
 ######
 
 #separate columns into species, temps, and replicates
-Rstar_Oct14 <- separate(Oct_14, dataset, c("species", "replicate"), sep = 2) %>% 
+Rstar_Oct21 <- separate(Oct_21, dataset, c("species", "replicate"), sep = 2) %>% 
 	separate(., replicate, c("temperature", "replicate"), sep = 2) %>%
 	separate(., replicate, c("replicate", "file"), sep = 1) %>% 
 	select(-file)
 
 #### Unite columns to make a unique ID####
-Rstar_Oct14 <- Rstar_Oct14 %>%
+Rstar_Oct21 <- Rstar_Oct21 %>%
 	unite(unique_ID, species, temperature, replicate, remove = FALSE) 
 
 #make date and time into readable time
 
-Rstar_Oct14$start_time<-ymd_hms(Rstar_Oct14$start_time)
+Rstar_Oct21$start_time<-ymd_hms(Rstar_Oct21$start_time)
 
 
 
@@ -65,4 +67,4 @@ Rstar_Oct14$start_time<-ymd_hms(Rstar_Oct14$start_time)
 
 
 #### Step 4: write out the df to a csv ####
-write.csv(Rstar_Oct14, "data-processed/cellcount_Oct14.csv")
+write.csv(Rstar_Oct21, "data-processed/cellcount_Oct21.csv")
