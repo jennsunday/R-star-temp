@@ -102,6 +102,9 @@ with(Rstar_expt30, plot((biovolume)~start_time, ylab="", xlab="", type="n", ylim
 with(subset(Rstar_expt30, Rstar_expt30$species=="CH"), points((biovolume)~start_time, col=1))
 with(subset(Rstar_expt30, Rstar_expt30$species=="TT"), points((biovolume)~start_time, col=2))
 
+
+sept13 - OCt28
+aug12-Oct4
 #add nitrate data
 #
 #par(mfrow=c(1,4))

@@ -19,8 +19,7 @@ library(lubridate)
 
 
 #### Step 2: create a list of file names for each of the summaries ####
-fnams<- c(list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_160913", full.names = TRUE))
-, ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
+fnams<- c(list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_160913", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
 list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_160916", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
 list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_160920", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
 list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_160923", full.names = TRUE), ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
@@ -31,6 +30,7 @@ list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_161007", fu
 list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_161011", full.names = TRUE),
 list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_161014", full.names = TRUE),
 list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_161018", full.names = TRUE),
+list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries-161021", full.names = TRUE),
 list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_161025", full.names = TRUE),
 list.files("./data/cell_concentrations/10_and_30/B_flowcam_summaries_161028", full.names = TRUE)) ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
 ## find out the names of all the files in data-summary, use full.names to get the relative path for each file
@@ -45,7 +45,7 @@ Septexpt <- fnams %>%
 	as.data.frame(.) %>% 
 	mutate(List.File = as.character(List.File)) %>% 
 dplyr::filter(List.File == "Particles / ml" | List.File == "Start Time" | List.File == "Volume (ABD)") %>% 
-	select(- starts_with("List")) %>%
+	select(- starts_with("List")) %>% 
 	t(.) %>% 
 	as.data.frame() %>% 
 	mutate(dataset = rownames(.)) %>% 
@@ -59,7 +59,7 @@ dplyr::filter(List.File == "Particles / ml" | List.File == "Start Time" | List.F
 ######
 #still need to correct some names and clean this up
 ######
-
+Rstar_Septexpt$start_time
 #separate columns into species, temps, and replicates
 Rstar_Septexpt <- separate(Septexpt, dataset, c("species", "replicate"), sep = 2) %>% 
 	separate(., replicate, c("temperature", "replicate"), sep = 2) %>%
@@ -98,7 +98,7 @@ par(mfrow=c(1,3))
 plot(log(Rstar_Septexpt$cell_count)~Rstar_Septexpt$start_time, type="n", main="TT", xlim=c())
 with(subset(Rstar_Septexpt, Rstar_Septexpt$species=="TT"& Rstar_Septexpt$temperature==10), points(log(cell_count)~start_time, col=1))
 with(subset(Rstar_Septexpt, Rstar_Septexpt$species=="TT"& Rstar_Septexpt$temperature==30), points(log(cell_count)~start_time, col=2))
-legend("topleft", pch=1, col=c(1,2), c("16°C", "25°C"))
+legend("topleft", pch=1, col=c(1,2), c("10°C", "30°C"))
 
 plot(log(Rstar_Septexpt$cell_count)~Rstar_Septexpt$start_time, ty="n", main="CH")
 with(subset(Rstar_Septexpt, Rstar_Septexpt$species=="CH"& Rstar_Septexpt$temperature==10), points(log(cell_count)~start_time, col=1))
