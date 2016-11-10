@@ -24,24 +24,24 @@ mediumnitrate<-subset(nitratedata, nitratedata$species=="Medium")
 init.nitrate<-subset(nitratedata, nitratedata$species=="Medium" & nitratedata$date_N_assay=="2016-08-18")
 
 mean(mediumnitrate$nitrate)
-
+min(mediumnitrate$date_N_assay)-5
 plot(mediumnitrate$abs~mediumnitrate$date_N_assay)
 #### Step 3: plot nitrate for both species by temperature####
 par(mfrow=c(1,4))
-with(nitratedata10, plot(abs~date_N_assay, type="n", main="10", ylim=c(0, 40)))
+par(mar=c(3,3,1, 0.5), oma=c(0,1,0,0))
+with(nitratedata16, plot(nitrate~date_N_assay, type="n", ylim=c(0, 40), las=1, xlim=c(min(nitratedata10$date_N_assay)-5, max(nitratedata10$date_N_assay)+5)))
 with(subset(nitratedata10, nitratedata10$species=="CH"), points(nitrate~date_N_assay, col=1))
-with(subset(nitratedata10, nitratedata10$species=="TT"), points(nitrate~date_N_assay, col=2))
+with(subset(nitratedata10, nitratedata10$species=="TT"), points(nitrate~date_N_assay, col=3))
 
-legend("topright", pch=1, col=c(1,2), c("CH", "TT"))
-
-with(nitratedata16, plot(abs~date_N_assay, type="n", main="16", ylim=c(0, 40)))
+with(nitratedata16, plot(nitrate~date_N_assay, type="n", ylim=c(0, 40), las=1, xlim=c(min(nitratedata16$date_N_assay)-5, max(nitratedata16$date_N_assay)+5)))
 with(subset(nitratedata16, nitratedata16$species=="CH"), points(nitrate~date_N_assay, col=1))
-with(subset(nitratedata16, nitratedata16$species=="TT"), points(nitrate~date_N_assay, col=2))
+with(subset(nitratedata16, nitratedata16$species=="TT"), points(nitrate~date_N_assay, col=3))
 
-with(nitratedata25, plot(abs~date_N_assay, type="n", main="25", ylim=c(0, 40)))
+with(nitratedata16, plot(nitrate~date_N_assay, type="n", ylim=c(0, 40), las=1, xlim=c(min(nitratedata16$date_N_assay)-5, max(nitratedata16$date_N_assay)+5)))
 with(subset(nitratedata25, nitratedata25$species=="CH"), points(nitrate~date_N_assay, col=1))
-with(subset(nitratedata25, nitratedata25$species=="TT"), points(nitrate~date_N_assay, col=2))
+with(subset(nitratedata25, nitratedata25$species=="TT"), points(nitrate~date_N_assay, col=3))
 
-with(nitratedata30, plot(abs~date_N_assay, type="n", main="30", ylim=c(0, 40)))
+with(nitratedata16, plot(nitrate~date_N_assay, type="n", ylim=c(0, 40), las=1, xlim=c(min(nitratedata10$date_N_assay)-5, max(nitratedata10$date_N_assay)+5)))
 with(subset(nitratedata30, nitratedata30$species=="CH"), points(nitrate~date_N_assay, col=1))
-with(subset(nitratedata30, nitratedata30$species=="TT"), points(nitrate~date_N_assay, col=2))
+with(subset(nitratedata30, nitratedata30$species=="TT"), points(nitrate~date_N_assay, col=3))
+
