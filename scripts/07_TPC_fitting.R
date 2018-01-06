@@ -14,6 +14,9 @@ dat.full <- rdata_raw %>%
 				 temperature = temp)
 
 
+### Jenn, skip to line 139 to skip over the running of the fitting (this takes a little while),
+### and read in the estimated parameters
+
 ## fit TPCs, code and approach adapted from Thomas et al. 2016
 nbcurve<-function(temp,z,w,a,b){
 	res<-a*exp(b*temp)*(1-((temp-z)/(w/2))^2)
@@ -135,6 +138,8 @@ write_csv(fits, "data-processed/TPC_fits.csv")
 
 
 ### plot the curves
+fits <- read_csv("data-processed/TPC_fits.csv")
+
 
 plot(dat.full$growth.rate[dat.full$curve.id == 1]~dat.full$temperature[dat.full$curve.id == 1],ylim=c(pmin(-1.5,min(dat$growth.rate)),max(dat$growth.rate)+(0.2)*max(dat$growth.rate)),main=curve.id.list[1],
 		 xlim=c(min(dat$temperature)-2,max(dat$temperature)+2),xlab='Temperature',ylab='Specific growth rate (per day)', cex.lab=1.5,cex.axis=1.5)
