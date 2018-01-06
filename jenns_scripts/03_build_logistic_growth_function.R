@@ -6,18 +6,19 @@ names(Rtemp_all)
 #fix errors in temperature treatment names
 Rtemp_all$temperature[Rtemp_all$temperature=="01"]<-"03"
 Rtemp_all$temperature[Rtemp_all$temperature=="30"]<-"31"
+Rtemp_all$P<- Rtemp_all$cell_density
 
 # plot just the data ------------------
 par(mfrow=c(2,3))
-for(i in 1:length(unique(sp1data$temperature))){
+for(i in 1:6){
   curvedata<-subset(Rtemp_all, Rtemp_all$temperature==unique(Rtemp_all$temperature)[i] & Rtemp_all$species==1)
-with(curvedata, plot((cell_density)~time_since_innoc_days, col=as.numeric(temperature), 
-                    main=unique(Rtemp_all$temperature)[i], ylim=c(0, 30000)))
+  with(curvedata, plot((cell_density)~time_since_innoc_days, col=as.numeric(temperature), 
+                       main=unique(Rtemp_all$temperature)[i], ylim=c(0, 30000)))
 }
 
 
 # set up models -----------------------------------------------------------
-curvedata$P<- curvedata$cell_density
+
 Parameters <- c(r = 0.05, K = 25000)
 
 # Declare the parameters to be used as the bounds for the fitting algorithm

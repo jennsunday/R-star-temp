@@ -1,15 +1,15 @@
-Rtemp_all<-read_csv("data-processed/Rtemp_all.csv")
+Rtemp_all<-read.csv("data-processed/Rtemp_all.csv")
 library(simecol)
 library(tidyverse)
 
 #fix errors in temperature treatment names
-Rtemp_all$temperature[Rtemp_all$temperature=="03"]<-"03"
+Rtemp_all$temperature[Rtemp_all$temperature=="1"]<-"3"
 Rtemp_all$temperature[Rtemp_all$temperature=="30"]<-"31"
 
 # plot just the data ------------------
 par(mfrow=c(2,3))
-for(i in 1:length(unique(sp1data$temperature))){
-  curvedata<-subset(Rtemp_all, Rtemp_all$temperature==unique(Rtemp_all$temperature)[i] & Rtemp_all$species==1)
+for(i in 1:6){
+curvedata<-subset(Rtemp_all, Rtemp_all$temperature==unique(Rtemp_all$temperature)[i] & Rtemp_all$species==1)
 with(curvedata, plot((cell_density)~time_since_innoc_days, col=as.numeric(temperature), 
                     main=unique(Rtemp_all$temperature)[i], ylim=c(0, 30000)))
 }
