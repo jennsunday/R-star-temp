@@ -1,0 +1,7 @@
+temp<-c(3,10,17, 24, 31, 38)
+light<-c(19, 33, 41, 65, 76, 90)
+plot(light~temp, ylab="Light (umol m-2 s-1)")
+inc4temp<-c(10, 30)
+inc4light<-c(36, 72)
+points(inc4light~inc4temp, col=2)
+abline(lm(light~temp))
