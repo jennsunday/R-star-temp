@@ -1,8 +1,5 @@
 #Goal: plot all temperatures for a given species
 
-#figure out the mean starting condition and put that into model in previous script
-mean(subset(Rtemp_all, Rtemp_all$time_since_innoc_days<1)$P)
-
 #to do: investigate spurious outliers and refit models.
 #to do: use this model to fit decay in N
 
@@ -151,7 +148,10 @@ for(i in 1:4){
 
 results38<-data.frame(r=(-resultsr), K=resultsk, temp=rep(38, 4), species=1:4)
 
-
+#
+#
+#
+#
 
 results<-rbind(results3, results10, results17, results24, results31, results38)
 write.csv(results, file="data-processed/logistic_growth_fits_r-star.csv")

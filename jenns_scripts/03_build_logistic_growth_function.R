@@ -1,7 +1,14 @@
+#Goal: create functions to fit logistic growth and plot results
+
+#read in data
 Rtemp_all<-read_csv("data-processed/Rtemp_all.csv")
+
+#read in libraries
 library(simecol)
 library(tidyverse)
-names(Rtemp_all)
+
+#figure out the mean starting condition and put that into model in previous script
+mean(subset(Rtemp_all, Rtemp_all$time_since_innoc_days<1)$P)
 
 #fix errors in temperature treatment names
 Rtemp_all$temperature[Rtemp_all$temperature=="01"]<-"03"
