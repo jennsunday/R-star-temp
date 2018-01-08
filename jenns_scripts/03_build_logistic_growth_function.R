@@ -1,19 +1,20 @@
 #Goal: create functions to fit logistic growth
 
 #read in data
-Rtemp_all<-read_csv("data-processed/Rtemp_all.csv")
+Rtemp_all<-read.csv("data-processed/Rtemp_all.csv")
 
 #read in libraries
 library(simecol)
 library(tidyverse)
 
-#figure out the mean starting condition and put that into model in previous script
-mean(subset(Rtemp_all, Rtemp_all$time_since_innoc_days<1)$P)
 
 #fix errors in temperature treatment names
-Rtemp_all$temperature[Rtemp_all$temperature=="01"]<-"03"
+Rtemp_all$temperature[Rtemp_all$temperature=="1"]<-"3"
 Rtemp_all$temperature[Rtemp_all$temperature=="30"]<-"31"
 Rtemp_all$P<- Rtemp_all$cell_density
+
+#figure out the mean starting condition and put that into model in previous script
+mean(subset(Rtemp_all, Rtemp_all$time_since_innoc_days<1)$P)
 
 # plot just the data ------------------
 par(mfrow=c(2,3))
