@@ -116,7 +116,7 @@ plotsinglefit <- function(curvedata){
   simulateddata <- ysim
   
   # Plot the results of our model fitting.
-  with(observeddata, plot(N~obstime, ylim=c(0, max(N)*2)))
+  with(observeddata, plot(N~obstime, ylim=c(0, 12)))
   with(simulateddata, lines(N~time, col=2))
 }
 
@@ -259,6 +259,10 @@ for(i in 1:4){
 }
 results38<-data.frame(r=resultsr*(c(1, -1, -1, 1)), K=resultsk, 
                       K_flat=flatline_int, K_flat_SE=flatline_int_SE, temp=rep(38, 4), species=1:4)
+#
+#
+#
+#
 
 
 results<-rbind(results3, results10, results17, results24, results31, results38)

@@ -104,7 +104,7 @@ for(i in 3:4){
 }
 results24<-data.frame(r=resultsr, K=resultsk, temp=rep(24, 4), species=1:4)
 
-par(mfrow=c(2,2))
+
 #for species 1-3, temp 5, use:
 Parameters <- c(r = 0.5, K = 1000)
 LowerBound <- c(r = 0, K = 0.1)
