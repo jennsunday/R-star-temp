@@ -63,6 +63,11 @@ par(mfrow=c(1,2))
 with (cdata, plot(meanabs~date))
 with (cdata, plot(nitrate~date))
 
+#
+#
+#
+#
+
 #plot by temp
 par(mfrow=c(2,3))
 for (i in c(3, 10, 17, 24, 31, 38)){

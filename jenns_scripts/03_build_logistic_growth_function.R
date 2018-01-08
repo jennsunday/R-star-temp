@@ -1,4 +1,4 @@
-#Goal: create functions to fit logistic growth and plot results
+#Goal: create functions to fit logistic growth
 
 #read in data
 Rtemp_all<-read_csv("data-processed/Rtemp_all.csv")
