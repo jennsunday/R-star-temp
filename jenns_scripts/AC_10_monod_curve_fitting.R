@@ -104,7 +104,8 @@ ACfilteredN %>%
               control = nls.control(maxiter=100, minFactor=1/204800000)))) %>% 
   ungroup() %>% 
   ggplot(aes(x = N.Treatment, y = estimate, color = factor(N.Treatment))) + geom_point(size = 4) +
-  geom_line() + theme_bw() + facet_wrap( ~ Temperature)
+  geom_line() + theme_bw() + facet_wrap( ~ Temperature) + 
+  geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=.1) 
 ggsave("figures/AC_monod_curves.png")
 
 AC_r <- ACfilteredN %>% 
@@ -121,6 +122,43 @@ ACfilteredN %>%
   do(tidy(nls(Particles.per.ml ~ 75 * (1+a)^(Hours.since.Innoc),
               data= .,  start=list(a=0.01),
               control = nls.control(maxiter=100, minFactor=1/204800000)))) %>% 
-  ggplot(aes(x = Temperature, y = estimate, color = factor(Temperature))) + geom_point(size = 4) +
-  geom_line() + theme_bw() + facet_wrap( ~ N.Treatment)
+  ggplot(aes(x = Temperature, y = estimate, color = factor(Temperature))) + geom_point(size = 1) +
+  geom_line() + theme_bw() + facet_wrap( ~ N.Treatment) + 
+  geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=.1) 
 ggsave("figures/AC_TPC_by_nitrate_curves.png")
+
+
+#set up the bootstrapping
+for (j in c(13, 16, 19, 22, 25, 28)){
+for (k in c(0, 11, 22, 33, 55, 110, 440)){
+test<-subset(ACfilteredN, ACfilteredN$Temperature==13 & ACfilteredN$N.Treatment==k)
+boot_r<-1:100
+for(i in 1:100){
+  mod<-sample_n(test, length(test$day)-1) %>%
+  do(tidy(nls(Particles.per.ml ~ 75 * (1+a)^(Hours.since.Innoc),
+              data= .,  start=list(a=0.01),
+              control = nls.control(maxiter=100, minFactor=1/204800000))))
+  boot_r[i]<-mod$estimate
+  name<-data.frame(a=unique(boot_r), Temperature=test$Temperature[1], N.Treatment=test$N.Treatment[1])
+  assign(paste("boot_r_unique", test$Temperature[1], test$N.Treatment[1], sep ="_"), name)
+ }
+}
+}
+bootedr<-rbind(boot_r_unique_13_0, 
+               boot_r_unique_13_11, 
+               boot_r_unique_13_22, 
+             
+               , 
+               boot_r_unique_13_11, 
+               boot_r_unique_13_22,boot_r_unique_22, boot_r_unique_25, boot_r_unique_28)
+
+grep("boot_r_unique", R_GlobalEnv)
+
+rbind("boot_r_uniqu_e*")
+boot_r_unique_13_11
+
+list(boot_r_unique*)
+bootedr %>% 
+  group_by(Temperature) %>% 
+  ggplot(aes(x = Temperature, y = r, color = factor(Temperature))) + geom_point(size = 1) +
+  geom_line() + theme_bw() + facet_wrap( ~ N.Treatment) 
