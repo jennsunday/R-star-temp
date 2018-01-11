@@ -3,6 +3,7 @@
 #read in data
 Rtemp_all<-read.csv("data-processed/Rtemp_all.csv")
 
+
 #read in libraries
 library(simecol)
 library(tidyverse)
@@ -13,17 +14,21 @@ Rtemp_all$temperature[Rtemp_all$temperature=="1"]<-"3"
 Rtemp_all$temperature[Rtemp_all$temperature=="30"]<-"31"
 Rtemp_all$P<- Rtemp_all$cell_density
 
+
+#troubleshoot some weird looking data
+subset(Rtemp_all, Rtemp_all$temperature=="31" & Rtemp_all$species==1 & Rtemp_all$cell_density>2000)
+
 #figure out the mean starting condition and put that into model in previous script
 mean(subset(Rtemp_all, Rtemp_all$time_since_innoc_days<1)$P)
 
 # plot just the data ------------------
 par(mfrow=c(2,3))
 for(i in 1:6){
-  curvedata<-subset(Rtemp_all, Rtemp_all$temperature==unique(Rtemp_all$temperature)[i] & Rtemp_all$species==1)
+  curvedata<-subset(Rtemp_all, Rtemp_all$temperature==unique(Rtemp_all$temperature)[i] & Rtemp_all$species==2)
   with(curvedata, plot((cell_density)~time_since_innoc_days, col=as.numeric(temperature), 
                        main=unique(Rtemp_all$temperature)[i], ylim=c(0, 30000)))
 }
-
+names(Rtemp_all)
 
 # set up models -----------------------------------------------------------
 
@@ -92,6 +97,11 @@ plotsinglefit <- function(curvedata){
                                method = "PORT", lower = LowerBound, upper = UpperBound, scale.par = ParamScaling,
                                control = list(trace = T)
   )
+  
+  r <- coef(fittedCRmodel)[1]
+  K <- coef(fittedCRmodel)[2]
+  output <- data.frame(r, K)
+  return(output)
   
   # To display the fitted results we need to create a new OdeModel object. Here
   # we duplicate CRmodel and then alter it to use our new fitted parameters.

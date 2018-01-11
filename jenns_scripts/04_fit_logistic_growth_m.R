@@ -21,9 +21,9 @@ ParamScaling <- 0.001 / UpperBound
 for(i in 1:4){
   curvedata<-subset(Rtemp_all, Rtemp_all$temperature==unique(Rtemp_all$temperature)[2] 
                     & Rtemp_all$species==i)
-  plotsinglefit(curvedata)
-  resultsr[i]<-controlfit(curvedata)$r[1]
-  resultsk[i]<-controlfit(curvedata)$K[1]
+  fitgrowth<-plotsinglefit(curvedata)
+  resultsr[i]<-fitgrowth$r[1]
+  resultsk[i]<-fitgrowth$K[1]
 }
 
 results3<-data.frame(r=resultsr*(c(1, -1, -1, 1)), K=resultsk, temp=rep(3, 4), species=1:4)

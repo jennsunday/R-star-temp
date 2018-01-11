@@ -4,10 +4,10 @@ library(minpack.lm)
 library(purrr)
 library(stringr)
 
-TT <- read_csv("data-raw/TT_2015.csv")
+TT <- read_csv("data/monod_data/TT_15_08_24.csv")
 
 #plot raw data 
-TTfiltered %>% 
+TT %>% 
 	mutate(day = Hours.since.Innoc/24) %>% 
 	#mutate(Particles.per.ml = log(Particles.per.ml)) %>% 
 	ggplot(data = ., aes(x = day, y = Particles.per.ml, color = factor(N.Treatment))) + geom_point() +
@@ -64,10 +64,10 @@ TTfiltered<- TT %>%
 								Temperature == 28 & N.Treatment == 0 |
 									Temperature == 13|
 									Temperature == 10) 
+
 #plot filtered data
 TTfiltered %>% 
 	mutate(day = Hours.since.Innoc/24) %>% 
-	filter(Temperature == 28) %>% 
 	#mutate(Particles.per.ml = log(Particles.per.ml)) %>% 
 	ggplot(data = ., aes(x = day, y = Particles.per.ml, color = factor(N.Treatment))) + geom_point() +
 	facet_wrap( ~ Temperature, scales = "free") + geom_line() + geom_abline(slope = 1, intercept = 5)
@@ -95,7 +95,7 @@ TTfilteredN %>%
 	ungroup() %>% 
 	ggplot(aes(x = N.Treatment, y = estimate, color = factor(N.Treatment))) + geom_point(size = 4) +
 	geom_line() + theme_bw() + facet_wrap( ~ Temperature)
-ggsave("figures/monod_curves.png")
+ggsave("figures/TT_monod_curves.png")
 
 TT_r <- TTfilteredN %>% 
 	group_by(Temperature, N.Treatment) %>% 
@@ -103,7 +103,7 @@ TT_r <- TTfilteredN %>%
 							data= .,  start=list(a=0.01),
 							control = nls.control(maxiter=100, minFactor=1/204800000)))) 
 
-write_csv(TT_r, "data-processed/fitted_r_TT_2018_nls.csv")
+write_csv(TT_r, "data-processed/fitted_r_TT_from_2015.csv")
 
 
 TTfilteredN %>% 
@@ -113,4 +113,4 @@ TTfilteredN %>%
 							control = nls.control(maxiter=100, minFactor=1/204800000)))) %>% 
 	ggplot(aes(x = Temperature, y = estimate, color = factor(Temperature))) + geom_point(size = 4) +
 	geom_line() + theme_bw() + facet_wrap( ~ N.Treatment)
-ggsave("figures/TPC_by_nitrate_curves.png")
+ggsave("figures/TT_TPC_by_nitrate_curves.png")
