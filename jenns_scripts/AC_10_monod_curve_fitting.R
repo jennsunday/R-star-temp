@@ -144,21 +144,17 @@ for(i in 1:100){
  }
 }
 }
+
 bootedr<-rbind(boot_r_unique_13_0, 
                boot_r_unique_13_11, 
-               boot_r_unique_13_22, 
-             
-               , 
-               boot_r_unique_13_11, 
-               boot_r_unique_13_22,boot_r_unique_22, boot_r_unique_25, boot_r_unique_28)
+               boot_r_unique_13_22)
+#
+# need to find a way to bind all of the objects that start with boot_r_unique_!
 
+#trying that here
 grep("boot_r_unique", R_GlobalEnv)
 
 rbind("boot_r_uniqu_e*")
 boot_r_unique_13_11
 
 list(boot_r_unique*)
-bootedr %>% 
-  group_by(Temperature) %>% 
-  ggplot(aes(x = Temperature, y = r, color = factor(Temperature))) + geom_point(size = 1) +
-  geom_line() + theme_bw() + facet_wrap( ~ N.Treatment) 
