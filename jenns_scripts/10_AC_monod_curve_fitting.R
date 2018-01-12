@@ -130,8 +130,8 @@ ggsave("figures/AC_TPC_by_nitrate_curves.png")
 
 #set up the bootstrapping
 for (j in c(13, 16, 19, 22, 25, 28)){
-for (k in c(0, 11, 22, 33, 55, 110, 440)){
-test<-subset(ACfilteredN, ACfilteredN$Temperature==13 & ACfilteredN$N.Treatment==k)
+for (k in c(0, 11, 22, 33, 55, 110, 220, 440)){
+test<-subset(ACfilteredN, ACfilteredN$Temperature==j & ACfilteredN$N.Treatment==k)
 boot_r<-1:100
 for(i in 1:100){
   mod<-sample_n(test, length(test$day)-1) %>%
@@ -145,16 +145,14 @@ for(i in 1:100){
 }
 }
 
-bootedr<-rbind(boot_r_unique_13_0, 
-               boot_r_unique_13_11, 
-               boot_r_unique_13_22)
-#
-# need to find a way to bind all of the objects that start with boot_r_unique_!
+# bind all of the objects that start with boot_r_unique_!
 
 #trying that here
-grep("boot_r_unique", R_GlobalEnv)
+mget(ls(pattern="boot_r_unique"))
 
-rbind("boot_r_uniqu_e*")
-boot_r_unique_13_11
+allboots<-do.call("rbind", mget(ls(pattern="boot_r_unique")))
 
-list(boot_r_unique*)
+allboots %>% 
+  group_by(Temperature, N.Treatment) %>% 
+  ggplot(aes(x = N.Treatment, y = a, color = factor(N.Treatment))) + geom_point(size = 2) +
+  geom_line() + theme_bw() + facet_wrap( ~ Temperature)

@@ -114,3 +114,30 @@ TTfilteredN %>%
 	ggplot(aes(x = Temperature, y = estimate, color = factor(Temperature))) + geom_point(size = 4) +
 	geom_line() + theme_bw() + facet_wrap( ~ N.Treatment)
 ggsave("figures/TT_TPC_by_nitrate_curves.png")
+
+#set up the jacknifing
+for (j in c(13, 16, 19, 22, 25, 28)){
+  for (k in c(0, 11, 22, 33, 55, 110, 220, 440)){
+    test<-subset(TTfilteredN, TTfilteredN$Temperature==j & TTfilteredN$N.Treatment==k)
+    boot_r<-1:100
+    for(i in 1:100){
+      mod<-sample_n(test, length(test$day)-1) %>%
+        do(tidy(nls(Particles.per.ml ~ 75 * (1+a)^(Hours.since.Innoc),
+                    data= .,  start=list(a=0.01),
+                    control = nls.control(maxiter=100, minFactor=1/204800000))))
+      boot_r[i]<-mod$estimate
+      name<-data.frame(a=unique(boot_r), Temperature=test$Temperature[1], N.Treatment=test$N.Treatment[1])
+      assign(paste("boot_r_unique", test$Temperature[1], test$N.Treatment[1], sep ="_"), name)
+    }
+  }
+}
+
+# bind all of the objects that start with boot_r_unique_!
+allboots<-do.call("rbind", mget(ls(pattern="boot_r_unique")))
+
+#plot the jacknifed data - monod
+allboots %>% 
+  group_by(Temperature, N.Treatment) %>% 
+  ggplot(aes(x = N.Treatment, y = a, color = factor(N.Treatment))) + geom_point(size = 2) +
+  geom_line() + theme_bw() + facet_wrap( ~ Temperature)
+ggsave("figures/TT_monod_jacknifed.png")
