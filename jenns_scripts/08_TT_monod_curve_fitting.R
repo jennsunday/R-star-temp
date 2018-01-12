@@ -113,8 +113,8 @@ linear_r %>%
   theme_bw() + facet_wrap( ~ Temperature) + 
   geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=.2)
 
-write_csv(linear_r, "data-processed/CH_r_lm.csv")
-ggsave("figures/CH_monod_curves.png")
+write_csv(linear_r, "data-processed/TT_r_lm.csv")
+ggsave("figures/TT_monod_curves.png")
 
 #plot linear fit over raw data
 TTlinear_r_aug<- TTfilteredN %>% 
