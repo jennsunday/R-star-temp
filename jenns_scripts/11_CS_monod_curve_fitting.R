@@ -40,7 +40,7 @@ CSfiltered<- CS %>%
            Temperature == 13 & N.Treatment == 3 & day<6.5|
            Temperature == 13 & N.Treatment == 2 & day<7 & day>2|
            Temperature == 13 & N.Treatment == 1 & day<7 & day>2|
-           Temperature == 13 & N.Treatment == 0 & day>2.5|
+           Temperature == 13 & N.Treatment == 0 & day<5.5 & day>0.5|
            Temperature == 16 & N.Treatment == 8 & day<6|
            Temperature == 16 & N.Treatment == 7 & day<6|
            Temperature == 16 & N.Treatment == 6 & day<6| 
@@ -49,7 +49,7 @@ CSfiltered<- CS %>%
            Temperature == 16 & N.Treatment == 3 & day<6|
            Temperature == 16 & N.Treatment == 2 & day<6|
            Temperature == 16 & N.Treatment == 1 & day<5.5|
-           Temperature == 16 & N.Treatment == 0 & day>2.5|
+           Temperature == 16 & N.Treatment == 0 & day<5.5 & day>0.5|
            Temperature == 19 & N.Treatment == 8 & day<6|
            Temperature == 19 & N.Treatment == 7 & day<6|
            Temperature == 19 & N.Treatment == 6 & day<6| 
@@ -57,8 +57,8 @@ CSfiltered<- CS %>%
            Temperature == 19 & N.Treatment == 4 & day<6|
            Temperature == 19 & N.Treatment == 3 & day<6 |
            Temperature == 19 & N.Treatment == 2 & day<6 |
-           Temperature == 19 & N.Treatment == 1 & day<6 |
-           Temperature == 19 & N.Treatment == 0 & day>2 |
+           Temperature == 19 & N.Treatment == 1 & day<5 |
+           Temperature == 19 & N.Treatment == 0 & day<3.5 & day>0.5|
            Temperature == 22 & N.Treatment == 8 & day<6 |
            Temperature == 22 & N.Treatment == 7 & day<6 |
            Temperature == 22 & N.Treatment == 6 & day<6 | 
@@ -67,7 +67,7 @@ CSfiltered<- CS %>%
            Temperature == 22 & N.Treatment == 3 & day<5.5 |
            Temperature == 22 & N.Treatment == 2 & day<5.5 |
            Temperature == 22 & N.Treatment == 1 & day<4 |
-           Temperature == 22 & N.Treatment == 0 & day>2 |
+           Temperature == 22 & N.Treatment == 0 & day<3.5 & day>0.5|
            Temperature == 25 & N.Treatment == 8 & day<6 |
            Temperature == 25 & N.Treatment == 7 & day<6 |
            Temperature == 25 & N.Treatment == 6 & day<6 | 
@@ -76,7 +76,7 @@ CSfiltered<- CS %>%
            Temperature == 25 & N.Treatment == 3 & day<5.5 |
            Temperature == 25 & N.Treatment == 2 & day<5.5 |
            Temperature == 25 & N.Treatment == 1 & day<4.5 |
-           Temperature == 25 & N.Treatment == 0 & day>1.5 |
+           Temperature == 25 & N.Treatment == 0 & day<2.8 & day>0.5|
            Temperature == 28 & N.Treatment == 8 & day<6 |
            Temperature == 28 & N.Treatment == 7 & day<6 |
            Temperature == 28 & N.Treatment == 6 & day<6 | 
@@ -85,7 +85,7 @@ CSfiltered<- CS %>%
            Temperature == 28 & N.Treatment == 3 & day<6 |
            Temperature == 28 & N.Treatment == 2 & day<6 |
            Temperature == 28 & N.Treatment == 1 & day<5.5 |
-           Temperature == 28 & N.Treatment == 0 & day>1.5  )
+           Temperature == 28 & N.Treatment == 0 & day>0.5 & day<2.8  )
 
 #take filtered data, add actual N concentrations
 CSfilteredN <- CSfiltered %>% 	
@@ -104,7 +104,7 @@ CSfilteredN <- CSfiltered %>%
 #plot filtered data - linear model fits...
 CSfilteredN %>% 
   filter(day>0.5) %>% 
-  mutate(Particles.per.ml = log(Particles.per.ml)) %>% 
+  mutate(Particles.per.ml = log(Particles.per.ml+1)) %>% 
   ggplot(data = ., aes(x = day, y = Particles.per.ml, color = factor(N.Treatment))) + geom_point() +
   facet_wrap( ~ Temperature, scales = "free") + geom_line() + 
   geom_smooth(method=lm, se=FALSE) 
@@ -127,22 +127,104 @@ ggsave("figures/CS_monod_curves.png")
 
 #plot linear fit over raw data
 linear_r_aug<- CSfilteredN %>% 
-  mutate(Particles.per.ml = log(Particles.per.ml)) %>% 
+  mutate(Particles.per.ml = log(Particles.per.ml+1)) %>% 
   filter(day>0.5) %>% 
   group_by(N.Treatment, Temperature) %>% 
   do(augment(lm(Particles.per.ml ~ day, data=.))) 
 
 CSN %>% 
   mutate(Particles.per.ml = log(Particles.per.ml)) %>% 
-  #ilter(N.Treatment==330) %>% 
+  filter(N.Treatment==11) %>% 
   ggplot(data = ., aes(x = day, y = Particles.per.ml, color = factor(N.Treatment))) + 
            geom_point() +
   facet_wrap( ~ Temperature, scales = "free") + geom_line() + 
-  #geom_line(data=subset(linear_r_aug, linear_r_aug$N.Treatment==330), aes(x=day, y=.fitted, colour=factor(N.Treatment)))
-  geom_line(data=linear_r_aug, aes(x=day, y=.fitted, colour=factor(N.Treatment)))
+  geom_line(data=subset(linear_r_aug, linear_r_aug$N.Treatment==11), aes(x=day, y=.fitted, colour=factor(N.Treatment)))
+  #geom_line(data=linear_r_aug, aes(x=day, y=.fitted, colour=factor(N.Treatment)))
+
 ggsave("figures/CS_linear_R_fits.png")
 
+#fitting monod curve -------
+CS_r_lm<-read_csv("data-processed/CS_r_lm.csv") #read in the data
 
+CS_ks_umax<-CS_r_lm %>%
+  filter(N.Treatment!=0) %>%
+  filter(term=="day") %>% 
+  group_by(Temperature) %>% 
+  mutate(r_estimate=estimate) %>% 
+  do(tidy(nls(r_estimate ~ umax* (N.Treatment / (ks+ N.Treatment)),
+              data= .,  start=list(ks = 0.001, umax = 0.01), algorithm="port", lower=list(c=0, d=0),
+              control = nls.control(maxiter=100, minFactor=1/204800000))))
+write_csv(CS_ks_umax, "data-processed/CS_ks_umax.csv")
+
+CS_ks_umax_fitted<-CS_r_lm %>%
+  filter(N.Treatment!=0) %>%
+  filter(term=="day") %>% 
+  group_by(Temperature) %>% 
+  mutate(r_estimate=estimate) %>% 
+  do(augment(nls(r_estimate ~ umax* (N.Treatment / (ks+ N.Treatment)),
+                 data= .,  start=list(ks = 0.001, umax = 0.01), algorithm="port", lower=list(c=0, d=0),
+                 control = nls.control(maxiter=100, minFactor=1/204800000))))
+
+#plot monod curves with fitted line
+linear_r %>% 
+  filter(term=="day") %>% 
+  filter(N.Treatment!=0) %>%
+  ggplot(aes(x = N.Treatment, y = estimate, color = factor(N.Treatment))) + geom_point(size = 4) +
+  theme_bw() + facet_wrap( ~ Temperature) + 
+  geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=.2) + 
+  geom_line(data=CS_ks_umax_fitted, aes(x=N.Treatment, y=.fitted), color=1) 
+
+
+#stat_function(fun = function(x) test$umax[3]*(x / (test$ks[3]+ x)))
+#joey please help me draw line from a dataframe that parse out over plots by temperature
+
+CS_ks_umax %>%
+  filter(term=="umax") %>%
+  ggplot(aes(x = Temperature, y = estimate)) + geom_point(size = 2) +
+  geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=.2)
+  
+CS_ks_umax %>%
+  filter(term=="ks") %>%
+  ggplot(aes(x = Temperature, y = estimate)) + geom_point(size = 4) +
+  geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=.2)
+
+
+# plot R-star ------------
+#R* = mKs / umax - m
+#
+#set m at 0.1
+CS_umax<- CS_ks_umax %>%
+  filter(term=="umax") 
+CS_ks<- CS_ks_umax %>%
+  filter(term=="ks") 
+m<-rep(0.1, 6)
+CS_umax$rstar<-m * CS_ks$estimate / (CS_umax$estimate - m)
+CS_umax %>%
+  ggplot(aes(x = Temperature, y = rstar)) + geom_point(size = 4) 
+
+#next redo this by pulling 1000 iterations from umax and k estimates with norm dist with se
+#write a function to draw random numbers with a boundary of 0:
+rtnorm <- function(n, mean, sd, a = -Inf, b = Inf){
+  qnorm(runif(n, pnorm(a, mean, sd), pnorm(b, mean, sd)), mean, sd)
+}
+
+CS_rstar_norm_summ<-data.frame(median=1:6, lci=1:6, uci=1:6, Temperature=CS_ks$Temperature)
+for(i in 1:length(TT_umax$estimate)){
+  rstar_norm<-(rtnorm(n=100, mean=CS_ks$estimate[i], sd=CS_ks$std.error[i], a=0, b=Inf)*m)/
+    (rnorm(100, mean=CS_umax$estimate[i], sd=CS_umax$std.error[i])-m)
+  CS_rstar_norm_summ[i,c(1:3)]<-quantile(rstar_norm, c(0.5, 0.05, 0.95))
+}
+
+write_csv(CS_rstar_norm_summ, "data-processed/CS_rstar.csv")
+
+with(CS_rstar_norm_summ, plot(median~Temperature, ylim=c(0, max(uci)*2), ylab="R star, uM", las=1))
+with(CS_rstar_norm_summ, segments(Temperature, lci, 
+                                  Temperature, uci))
+
+#
+#
+#
+#
 # previous coding working in non-logged data, fitting exponential curve
 CSfilteredN %>% 
   group_by(Temperature, N.Treatment) %>% 

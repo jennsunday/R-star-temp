@@ -8,6 +8,7 @@ TT <- read_csv("data/monod_data/TT_15_08_24.csv")
 
 #take raw data, add actual N concentrations
 TTN<- TT %>% 	
+  filter(N.Treatment!=5 | Temperature!=28 | MINUTE!=22) %>% 
   mutate(day = Hours.since.Innoc/24) %>% 
   mutate(N.Treatment = str_replace(N.Treatment, "1", "11")) %>%
   mutate(N.Treatment = str_replace(N.Treatment, "2", "22")) %>% 
@@ -20,10 +21,10 @@ TTN<- TT %>%
   mutate(N.Treatment = str_replace(N.Treatment, "1105", "55")) %>% 
   mutate(N.Treatment = as.numeric(N.Treatment))
 
-
 #filter out data where K seems to have been reached beyond the variability expected by noise (quite arbitrary)
 TTfiltered<- TT %>% 
 	mutate(day = Hours.since.Innoc/24) %>% 
+  filter(N.Treatment!=5 | Temperature!=28 | MINUTE!=22) %>% 
 	filter( Temperature == 13 & N.Treatment == 8 |
 	          Temperature == 13 & N.Treatment == 7 |
 	          Temperature == 13 & N.Treatment == 6 | 
@@ -31,7 +32,7 @@ TTfiltered<- TT %>%
 	          Temperature == 13 & N.Treatment == 4 |
 	          Temperature == 13 & N.Treatment == 3 |
 	          Temperature == 13 & N.Treatment == 2 |
-	          Temperature == 13 & N.Treatment == 1 |
+	          Temperature == 13 & N.Treatment == 1 & day<6 |
 	          Temperature == 13 & N.Treatment == 0 & day>0.5|
 	        Temperature == 16 & N.Treatment == 8 |
 				 	Temperature == 16 & N.Treatment == 7 |
@@ -40,30 +41,30 @@ TTfiltered<- TT %>%
 				 	Temperature == 16 & N.Treatment == 4 & day<6 |
 				 	Temperature == 16 & N.Treatment == 3 |
 				 	Temperature == 16 & N.Treatment == 2 |
-				 	Temperature == 16 & N.Treatment == 1 |
+				 	Temperature == 16 & N.Treatment == 1 & day<6 |
 				 	Temperature == 16 & N.Treatment == 0 |
 						Temperature == 19 & N.Treatment == 8  |
 						Temperature == 19 & N.Treatment == 7  |
 						Temperature == 19 & N.Treatment == 6 | 
 						Temperature == 19 & N.Treatment == 5 |
 						Temperature == 19 & N.Treatment == 4 |
-						Temperature == 19 & N.Treatment == 3 & day<5 |
+						Temperature == 19 & N.Treatment == 3 |
 						Temperature == 19 & N.Treatment == 2 |
 						Temperature == 19 & N.Treatment == 1 |
 						Temperature == 19 & N.Treatment == 0 & day>0.5|
 					Temperature == 22 & N.Treatment == 8 | 
 					Temperature == 22 & N.Treatment == 7 |
-					Temperature == 22 & N.Treatment == 6 | 
-					Temperature == 22 & N.Treatment == 5 |
-					Temperature == 22 & N.Treatment == 4 |
-					Temperature == 22 & N.Treatment == 3 |
+					Temperature == 22 & N.Treatment == 6 & day<4.5| 
+					Temperature == 22 & N.Treatment == 5 & day<4.5|
+					Temperature == 22 & N.Treatment == 4 & day<4.5|
+					Temperature == 22 & N.Treatment == 3 & day<4.5|
 					Temperature == 22 & N.Treatment == 2 |
 					Temperature == 22 & N.Treatment == 1 |
 					Temperature == 22 & N.Treatment == 0 | 		
 						  Temperature == 25 & N.Treatment == 8 |
 						  Temperature == 25 & N.Treatment == 7 |
-						  Temperature == 25 & N.Treatment == 6 & day<4.5 | 
-						  Temperature == 25 & N.Treatment == 5 & day<4.5 |
+						  Temperature == 25 & N.Treatment == 6 & day<4.5| 
+						  Temperature == 25 & N.Treatment == 5 & day<4.5|
 						  Temperature == 25 & N.Treatment == 4 & day<3 |
 						  Temperature == 25 & N.Treatment == 3 & day<3 |
 						  Temperature == 25 & N.Treatment == 2 |
@@ -72,7 +73,7 @@ TTfiltered<- TT %>%
 								Temperature == 28 & N.Treatment == 8 |
 								Temperature == 28 & N.Treatment == 7 |
 								Temperature == 28 & N.Treatment == 6 | 
-								Temperature == 28 & N.Treatment == 5 & day<4 |
+								Temperature == 28 & N.Treatment == 5 |
 								Temperature == 28 & N.Treatment == 4 & day<3 |
 								Temperature == 28 & N.Treatment == 3 & day<3 |
 								Temperature == 28 & N.Treatment == 2 |
@@ -93,13 +94,7 @@ TTfilteredN<- TTfiltered %>%
 	mutate(N.Treatment = str_replace(N.Treatment, "1105", "55")) %>% 
 	mutate(N.Treatment = as.numeric(N.Treatment))
 
-#plot filtered data - linear model fits...
-TTfilteredN %>% 
-  #filter(day>0.5) %>% 
-  mutate(Particles.per.ml = log(Particles.per.ml+100)) %>% 
-  ggplot(data = ., aes(x = day, y = Particles.per.ml, color = factor(N.Treatment))) + geom_point() +
-  facet_wrap( ~ Temperature, scales = "free") + geom_line() + 
-  geom_smooth(method=lm, se=FALSE) 
+#plot filtered data - linear model fits
 
 #plot monod curves with error
 linear_r<-TTfilteredN %>% 
@@ -118,32 +113,112 @@ ggsave("figures/TT_monod_curves.png")
 
 #plot linear fit over raw data
 TTlinear_r_aug<- TTfilteredN %>% 
-  mutate(Particles.per.ml = log(Particles.per.ml+100)) %>% 
+  mutate(Particles.per.ml = log(Particles.per.ml+1)) %>% 
   #filter(day>1.5) %>% 
   group_by(N.Treatment, Temperature) %>% 
   do(augment(lm(Particles.per.ml ~ day, data=.))) 
 
 TTN %>% 
-  mutate(Particles.per.ml = log(Particles.per.ml)) %>% 
-  #filter(N.Treatment==220) %>% 
+  mutate(Particles.per.ml = log(Particles.per.ml+1)) %>% 
+  filter(N.Treatment==22) %>% 
   ggplot(data = ., aes(x = day, y = Particles.per.ml, color = factor(N.Treatment))) + 
   geom_point() +
   facet_wrap( ~ Temperature, scales = "free") + geom_line() + 
-  #geom_line(data=subset(TTlinear_r_aug, TTlinear_r_aug$N.Treatment==220), aes(x=day, y=.fitted, colour=factor(N.Treatment)))
-  geom_line(data=linear_r_aug, aes(x=day, y=.fitted, colour=factor(N.Treatment)))
+  geom_line(data=subset(TTlinear_r_aug, TTlinear_r_aug$N.Treatment==22), aes(x=day, y=.fitted, colour=factor(N.Treatment)))
+  #geom_line(data=linear_r_aug, aes(x=day, y=.fitted, colour=factor(N.Treatment)))
 
 TTN %>% 
-  mutate(Particles.per.ml = log(Particles.per.ml)) %>% 
-  filter(Temperature==19) %>% 
-  ggplot(data = ., aes(x = day, y = Particles.per.ml, color = factor(N.Treatment))) + 
+  mutate(Particles.per.ml = log(Particles.per.ml+1)) %>% 
+  filter(Temperature==28) %>% 
+  ggplot(data = ., aes(x = DAY, y = Particles.per.ml, color = factor(N.Treatment))) + 
   geom_point() +
   facet_wrap( ~ N.Treatment) + geom_line() + 
-  geom_line(data=subset(TTlinear_r_aug, TTlinear_r_aug$Temperature==19), aes(x=day, y=.fitted, colour=factor(N.Treatment)))
+  geom_line(data=subset(TTlinear_r_aug, TTlinear_r_aug$Temperature==28), aes(x=day, y=.fitted, colour=factor(N.Treatment)))
 #geom_line(data=linear_r_aug, aes(x=day, y=.fitted, colour=factor(N.Treatment)))
 
-ggsave("figures/CH_linear_R_fits.png")
+ggsave("figures/TT_linear_R_fits.png")
 
 
+#fitting monod curve -------
+TT_r_lm<-read_csv("data-processed/TT_r_lm.csv") #read in the data
+
+TT_ks_umax<-TT_r_lm %>%
+  filter(N.Treatment!=0) %>%
+  filter(term=="day") %>% 
+  #filter(Temperature==22) %>% 
+  group_by(Temperature) %>% 
+  mutate(r_estimate=estimate) %>% 
+  do(tidy(nls(r_estimate ~ umax* (N.Treatment / (ks+ N.Treatment)),
+              data= .,  start=list(ks = 1, umax = 1), algorithm="port", lower=list(c=0, d=0),
+              control = nls.control(maxiter=500, minFactor=1/204800000))))
+write_csv(TT_ks_umax, "data-processed/TT_ks_umax.csv")
+
+
+TT_ks_umax_fitted<-TT_r_lm %>%
+  filter(N.Treatment!=0) %>%
+  filter(term=="day") %>% 
+  group_by(Temperature) %>% 
+  mutate(r_estimate=estimate) %>% 
+  do(augment(nls(r_estimate ~ umax* (N.Treatment / (ks+ N.Treatment)),
+                 data= .,  start=list(ks = 1, umax = 1), algorithm="port", lower=list(c=0, d=0),
+                 control = nls.control(maxiter=100, minFactor=1/204800000))))
+
+#plot monod curves with fitted line
+linear_r %>% 
+  filter(term=="day") %>% 
+  filter(N.Treatment!=0) %>%
+  ggplot(aes(x = N.Treatment, y = estimate, color = factor(N.Treatment))) + geom_point(size = 4) +
+  theme_bw() + facet_wrap( ~ Temperature) + 
+  geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=.2) + 
+  geom_line(data=TT_ks_umax_fitted, aes(x=N.Treatment, y=.fitted), color=1) 
+ggsave("figures/TT_monod_fitted.png")
+
+#stat_function(fun = function(x) test$umax[3]*(x / (test$ks[3]+ x)))
+#joey please help me draw line from a dataframe that parse out over plots by temperature
+
+TT_ks_umax %>%
+  filter(term=="umax") %>%
+  ggplot(aes(x = Temperature, y = estimate)) + geom_point(size = 2) +
+  geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=.2)
+
+TT_ks_umax %>%
+  filter(term=="ks") %>%
+  ggplot(aes(x = Temperature, y = estimate)) + geom_point(size = 4) +
+  geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=.2)
+
+
+# plot R-star ------------
+#R* = mKs / umax - m
+#
+#set m at 0.1
+TT_umax<- TT_ks_umax %>%
+  filter(term=="umax") 
+TT_ks<- TT_ks_umax %>%
+  filter(term=="ks") 
+m<-rep(0.1, 6)
+TT_umax$rstar<-m * TT_ks$estimate / (TT_umax$estimate - m)
+TT_umax %>%
+  ggplot(aes(x = Temperature, y = rstar)) + geom_point(size = 4) 
+
+#next redo this by pulling 1000 iterations from umax and k estimates with norm dist with se
+#write a function to draw random numbers with a boundary of 0:
+rtnorm <- function(n, mean, sd, a = -Inf, b = Inf){
+  qnorm(runif(n, pnorm(a, mean, sd), pnorm(b, mean, sd)), mean, sd)
+}
+
+TT_rstar_norm_summ<-data.frame(median=1:6, lci=1:6, uci=1:6, Temperature=TT_ks$Temperature)
+for(i in 1:length(TT_umax$estimate)){
+rstar_norm<-(rtnorm(n=100, mean=TT_ks$estimate[i], sd=TT_ks$std.error[i], a=0, b=Inf)*m)/
+               (rnorm(100, mean=TT_umax$estimate[i], sd=TT_umax$std.error[i])-m)
+TT_rstar_norm_summ[i,c(1:3)]<-quantile(rstar_norm, c(0.5, 0.05, 0.95))
+}
+write_csv(TT_rstar_norm_summ, "data-processed/TT_rstar.csv")
+
+
+#
+#
+#
+#
 # previous coding working in non-logged data, fitting exponential curve
 
 TTfilteredN %>% 

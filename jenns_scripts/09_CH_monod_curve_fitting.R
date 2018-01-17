@@ -131,19 +131,98 @@ linear_r_aug<- CHfilteredN %>%
   mutate(Particles.per.ml = log(Particles.per.ml+100)) %>% 
   #filter(day>1.5) %>% 
   group_by(N.Treatment, Temperature) %>% 
-  do(augment(lm(Particles.per.ml ~ day, data=.))) 
+  do(augment(lm(Particles.per.ml ~ day, data=.)))
 
 CHN %>% 
   mutate(Particles.per.ml = log(Particles.per.ml)) %>% 
-  #filter(N.Treatment==33) %>% 
+  filter(N.Treatment %in% c(0,11,22)) %>% 
   ggplot(data = ., aes(x = day, y = Particles.per.ml, color = factor(N.Treatment))) + 
   geom_point() +
   facet_wrap( ~ Temperature, scales = "free") + geom_line() + 
-  #geom_line(data=subset(linear_r_aug, linear_r_aug$N.Treatment==33), aes(x=day, y=.fitted, colour=factor(N.Treatment)))
-  geom_line(data=linear_r_aug, aes(x=day, y=.fitted, colour=factor(N.Treatment)))
+  geom_line(data=subset(linear_r_aug, linear_r_aug$N.Treatment %in% c(0,11,22)), aes(x=day, y=.fitted, colour=factor(N.Treatment)))
+  #geom_line(data=linear_r_aug, aes(x=day, y=.fitted, colour=factor(N.Treatment)))
 
 
 ggsave("figures/CH_linear_R_fits.png")
+
+#fitting monod curve -------
+CH_r_lm<-read_csv("data-processed/CH_r_lm.csv") #read in the data
+
+CH_ks_umax<-CH_r_lm %>%
+  filter(N.Treatment!=0) %>%
+  filter(term=="day") %>% 
+  group_by(Temperature) %>% 
+  mutate(r_estimate=estimate) %>% 
+  do(tidy(nls(r_estimate ~ umax* (N.Treatment / (ks+ N.Treatment)),
+              data= .,  start=list(ks = 0.001, umax = 0.01), algorithm="port", lower=list(c=0, d=0),
+              control = nls.control(maxiter=100, minFactor=1/204800000))))
+write_csv(CH_ks_umax, "data-processed/CH_ks_umax.csv")
+
+CH_ks_umax_fitted<-CH_r_lm %>%
+  filter(N.Treatment!=0) %>%
+  filter(term=="day") %>% 
+  group_by(Temperature) %>% 
+  mutate(r_estimate=estimate) %>% 
+  do(augment(nls(r_estimate ~ umax* (N.Treatment / (ks+ N.Treatment)),
+                 data= .,  start=list(ks = 0.001, umax = 0.01), algorithm="port", lower=list(c=0, d=0),
+                 control = nls.control(maxiter=100, minFactor=1/204800000))))
+
+#plot monod curves with fitted line
+linear_r %>% 
+  filter(term=="day") %>% 
+  filter(N.Treatment!=0) %>%
+  ggplot(aes(x = N.Treatment, y = estimate, color = factor(N.Treatment))) + geom_point(size = 4) +
+  theme_bw() + facet_wrap( ~ Temperature) + 
+  geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=.2) + 
+  geom_line(data=CH_ks_umax_fitted, aes(x=N.Treatment, y=.fitted), color=1) 
+
+
+#stat_function(fun = function(x) test$umax[3]*(x / (test$ks[3]+ x)))
+#joey please help me draw line from a dataframe that parse out over plots by temperature
+
+CH_ks_umax %>%
+  filter(term=="umax") %>%
+  ggplot(aes(x = Temperature, y = estimate)) + geom_point(size = 2) +
+  geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=.2)
+
+CH_ks_umax %>%
+  filter(term=="ks") %>%
+  ggplot(aes(x = Temperature, y = estimate)) + geom_point(size = 4) +
+  geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=.2)
+
+
+# plot R-star ------------
+#R* = mKs / umax - m
+#
+#set m at 0.1
+CH_umax<- CH_ks_umax %>%
+  filter(term=="umax") 
+CH_ks<- CH_ks_umax %>%
+  filter(term=="ks") 
+m<-rep(0.1, 6)
+CH_umax$rstar_mean<-m * CH_ks$estimate / (CH_umax$estimate - m)
+CH_umax %>%
+  ggplot(aes(x = Temperature, y = rstar_mean)) + geom_point(size = 4) 
+
+#next redo this by pulling 1000 iterations from umax and k estimates with norm dist with se
+#write a function to draw random numbers with a boundary of 0:
+rtnorm <- function(n, mean, sd, a = -Inf, b = Inf){
+  qnorm(runif(n, pnorm(a, mean, sd), pnorm(b, mean, sd)), mean, sd)
+}
+
+CH_rstar_norm_summ<-data.frame(median=1:6, lci=1:6, uci=1:6, Temperature=CH_ks$Temperature)
+for(i in 1:length(CH_umax$estimate)){
+  rstar_norm<-(rtnorm(n=100, mean=CH_ks$estimate[i], sd=CH_ks$std.error[i], a=0, b=Inf)*m)/
+    (rnorm(100, mean=CH_umax$estimate[i], sd=CH_umax$std.error[i])-m)
+  CH_rstar_norm_summ[i,c(1:3)]<-quantile(rstar_norm, c(0.5, 0.05, 0.95))
+}
+write_csv(CH_rstar_norm_summ, "data-processed/CH_rstar.csv")
+
+with(CH_rstar_norm_summ, plot(median~Temperature, ylim=c(0, max(uci)*1.2), ylab="R star, uM", las=1))
+with(CH_rstar_norm_summ, segments(Temperature, lci, 
+                                  Temperature, uci))
+
+
 
 
 # previous coding working in non-logged data, fitting exponential curve

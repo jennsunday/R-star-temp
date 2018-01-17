@@ -98,10 +98,7 @@ plotsinglefit <- function(curvedata){
                                control = list(trace = T)
   )
   
-  r <- coef(fittedCRmodel)[1]
-  K <- coef(fittedCRmodel)[2]
-  output <- data.frame(r, K)
-  return(output)
+
   
   # To display the fitted results we need to create a new OdeModel object. Here
   # we duplicate CRmodel and then alter it to use our new fitted parameters.
@@ -119,6 +116,11 @@ plotsinglefit <- function(curvedata){
   # Plot the results of our model fitting.
   with(observeddata, plot(P~obstime, ylim=c(0, max(P)*2)))
   with(simulateddata, lines(P~time, col=2))
+  
+  r <- coef(fittedCRmodel)[1]
+  K <- coef(fittedCRmodel)[2]
+  output <- data.frame(r, K)
+  return(output)
 }
 
 # fit and plot ------------------------------------------------------------

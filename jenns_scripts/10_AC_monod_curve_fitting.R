@@ -103,7 +103,7 @@ ACfilteredN<- ACfiltered %>%
 #plot filtered data - linear model fits...
 ACfilteredN %>% 
   #filter(day>0.5) %>% 
-  mutate(Particles.per.ml = log(Particles.per.ml)) %>% 
+  mutate(Particles.per.ml = log(Particles.per.ml + 1)) %>% 
   ggplot(data = ., aes(x = day, y = Particles.per.ml, color = factor(N.Treatment))) + geom_point() +
   facet_wrap( ~ Temperature, scales = "free") + geom_line() + 
   geom_smooth(method=lm, se=FALSE) 
@@ -144,7 +144,89 @@ ACN %>%
 
 ggsave("figures/AC_linear_R_fits.png")
 
+#fitting monod curve -------
+AC_r_lm<-read_csv("data-processed/AC_r_lm.csv") #read in the data
 
+AC_ks_umax<-AC_r_lm %>%
+  filter(N.Treatment!=0) %>%
+  filter(term=="day") %>% 
+  group_by(Temperature) %>% 
+  mutate(r_estimate=estimate) %>% 
+  do(tidy(nls(r_estimate ~ umax* (N.Treatment / (ks+ N.Treatment)),
+              data= .,  start=list(ks = 0.001, umax = 0.01), algorithm="port", lower=list(c=0, d=0),
+              control = nls.control(maxiter=100, minFactor=1/204800000))))
+write_csv(AC_ks_umax, "data-processed/AC_ks_umax.csv")
+
+AC_ks_umax_fitted<-AC_r_lm %>%
+  filter(N.Treatment!=0) %>%
+  filter(term=="day") %>% 
+  group_by(Temperature) %>% 
+  mutate(r_estimate=estimate) %>% 
+  do(augment(nls(r_estimate ~ umax* (N.Treatment / (ks+ N.Treatment)),
+                 data= .,  start=list(ks = 0.001, umax = 0.01), algorithm="port", lower=list(c=0, d=0),
+                 control = nls.control(maxiter=100, minFactor=1/204800000))))
+
+#plot monod curves with fitted line
+linear_r %>% 
+  filter(term=="day") %>% 
+  filter(N.Treatment!=0) %>%
+  ggplot(aes(x = N.Treatment, y = estimate, color = factor(N.Treatment))) + geom_point(size = 4) +
+  theme_bw() + facet_wrap( ~ Temperature) + 
+  geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=.2) + 
+  geom_line(data=AC_ks_umax_fitted, aes(x=N.Treatment, y=.fitted), color=1) 
+
+
+#stat_function(fun = function(x) test$umax[3]*(x / (test$ks[3]+ x)))
+#joey please help me draw line from a dataframe that parse out over plots by temperature
+
+AC_ks_umax %>%
+  filter(term=="umax") %>%
+  ggplot(aes(x = Temperature, y = estimate)) + geom_point(size = 2) +
+  geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=.2)
+
+AC_ks_umax %>%
+  filter(term=="ks") %>%
+  ggplot(aes(x = Temperature, y = estimate)) + geom_point(size = 4) +
+  geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=.2)
+
+
+# plot R-star ------------
+#R* = mKs / umax - m
+#
+#set m at 0.1
+AC_umax<- AC_ks_umax %>%
+  filter(term=="umax") 
+AC_ks<- AC_ks_umax %>%
+  filter(term=="ks") 
+m<-rep(0.1, 6)
+AC_umax$rstar<-m * AC_ks$estimate / (AC_umax$estimate - m)
+AC_umax %>%
+  ggplot(aes(x = Temperature, y = rstar)) + geom_point(size = 4) 
+
+#next redo this by pulling 1000 iterations from umax and k estimates with norm dist with se
+#write a function to draw random numbers with a boundary of 0:
+rtnorm <- function(n, mean, sd, a = -Inf, b = Inf){
+  qnorm(runif(n, pnorm(a, mean, sd), pnorm(b, mean, sd)), mean, sd)
+}
+
+AC_rstar_norm_summ<-data.frame(median=1:6, lci=1:6, uci=1:6, Temperature=AC_ks$Temperature)
+for(i in 1:length(TT_umax$estimate)){
+  rstar_norm<-(rtnorm(n=100, mean=AC_ks$estimate[i], sd=AC_ks$std.error[i], a=0, b=Inf)*m)/
+    (rnorm(100, mean=AC_umax$estimate[i], sd=AC_umax$std.error[i])-m)
+  AC_rstar_norm_summ[i,c(1:3)]<-quantile(rstar_norm, c(0.5, 0.05, 0.95))
+}
+write_csv(AC_rstar_norm_summ, "data-processed/AC_rstar.csv")
+
+with(AC_rstar_norm_summ, plot(median~Temperature, ylim=c(0, max(uci)*1.2), ylab="R star, uM", las=1))
+with(AC_rstar_norm_summ, segments(Temperature, lci, 
+                                  Temperature, uci))
+#
+
+#
+#
+#
+#
+#
 # previous coding working in non-logged data, fitting exponential curve
 
 ACfilteredN %>% 
