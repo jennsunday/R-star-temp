@@ -32,6 +32,7 @@ CSN %>%
 #filter out data where K seems to have been reaCSed beyond the variability expected by noise (quite arbitrary)
 CSfiltered<- CS %>% 
   mutate(day = Hours.since.Innoc/24) %>% 
+  #filter(day>0.5) %>% 
   filter(  Temperature == 13 & N.Treatment == 8 & day<6.5|
            Temperature == 13 & N.Treatment == 7 & day<6.5|
            Temperature == 13 & N.Treatment == 6 & day<6.5 & day>2| 
@@ -66,14 +67,14 @@ CSfiltered<- CS %>%
            Temperature == 22 & N.Treatment == 4 & day<5.5 |
            Temperature == 22 & N.Treatment == 3 & day<5.5 |
            Temperature == 22 & N.Treatment == 2 & day<5.5 |
-           Temperature == 22 & N.Treatment == 1 & day<4 |
+           Temperature == 22 & N.Treatment == 1 & day<4.5 |
            Temperature == 22 & N.Treatment == 0 & day<3.5 & day>0.5|
            Temperature == 25 & N.Treatment == 8 & day<6 |
            Temperature == 25 & N.Treatment == 7 & day<6 |
            Temperature == 25 & N.Treatment == 6 & day<6 | 
-           Temperature == 25 & N.Treatment == 5 & day<6 |
-           Temperature == 25 & N.Treatment == 4 & day<5.5 |
-           Temperature == 25 & N.Treatment == 3 & day<5.5 |
+           Temperature == 25 & N.Treatment == 5 & day<4.5 |
+           Temperature == 25 & N.Treatment == 4 & day<4.5 |
+           Temperature == 25 & N.Treatment == 3 & day<4.5 |
            Temperature == 25 & N.Treatment == 2 & day<5.5 |
            Temperature == 25 & N.Treatment == 1 & day<4.5 |
            Temperature == 25 & N.Treatment == 0 & day<2.8 & day>0.5|
@@ -133,8 +134,9 @@ linear_r_aug<- CSfilteredN %>%
   do(augment(lm(Particles.per.ml ~ day, data=.))) 
 
 CSN %>% 
-  mutate(Particles.per.ml = log(Particles.per.ml)) %>% 
-  filter(N.Treatment==11) %>% 
+  #mutate(Particles.per.ml = log(Particles.per.ml)) %>% 
+  filter(N.Treatment %in% c(330,440)) %>% 
+  filter(Temperature %in% c(25,28)) %>% 
   ggplot(data = ., aes(x = day, y = Particles.per.ml, color = factor(N.Treatment))) + 
            geom_point() +
   facet_wrap( ~ Temperature, scales = "free") + geom_line() + 
@@ -237,16 +239,6 @@ CSfilteredN %>%
 ggsave("figures/CS_monod_curves.png")
   
 
-CSfilteredN %>% 
-  group_by(Temperature, N.Treatment) %>% 
-  do(tidy(nls(Particles.per.ml ~ 75 * (1+a)^(Hours.since.Innoc),
-              data= .,  start=list(a=0.01),
-              control = nls.control(maxiter=100, minFactor=1/204800000)))) %>% 
-  ungroup() %>% 
-  ggplot(aes(x = N.Treatment, y = estimate, color = factor(N.Treatment))) + geom_point(size = 4) +
-  geom_line() + theme_bw() + facet_wrap( ~ Temperature)
-ggsave("figures/CS_monod_curves.png")
-
 CS_r <- CSfilteredN %>% 
   group_by(Temperature, N.Treatment) %>% 
   do(tidy(nls(Particles.per.ml ~ 75 * (1+a)^(Hours.since.Innoc),
@@ -270,36 +262,71 @@ ggsave("figures/CS_TPC_by_nitrate_curves.png")
 for (j in c(13, 16, 19, 22, 25, 28)){
   for (k in c(0, 11, 22, 33, 55, 110, 220, 440)){
     test<-subset(CSfilteredN, CSfilteredN$Temperature==j & CSfilteredN$N.Treatment==k)
-    boot_r<-1:1000
-    for(i in 1:1000){
-      mod<-sample_n(test, 5) %>% #take a sample of 5 of the sample days
+    boot_r<-1:100
+    for(i in 1:100){
+      mod<-sample_n(test, length(test$day)-1) %>% #take a sample of 1 - total # of days
         do(tidy(nls(Particles.per.ml ~ 75 * (1+a)^(Hours.since.Innoc),
                     data= .,  start=list(a=0.01),
                     control = nls.control(maxiter=100, minFactor=1/204800000))))
       boot_r[i]<-mod$estimate
-      name<-data.frame(a=boot_r, Temperature=test$Temperature[1], N.Treatment=test$N.Treatment[1])
+      name<-data.frame(a=boot_r, Temperature=test$Temperature[1], N.Treatment=test$N.Treatment[1], run=1:100)
       assign(paste("CSboot_r_unique", test$Temperature[1], test$N.Treatment[1], sep ="_"), name)
     }
   }
 }
 
-par(mfrow=c(1,1))
-plot(boot_r)
-median(boot_r)
-plot(quantile(boot_r, c(0.05, 0.5, 0.95)))
-
-
-# bind all of the objects that start with boot_r_unique
+# bind all of the objects that start with boot_r_unique_!
 CS_unique_boots<-do.call("rbind", mget(ls(pattern="CSboot_r_unique")))
+dim(CS_unique_boots)
 
-#plot the jacknifed data - monod
+#plot the bootstrapped data - monod
 CS_unique_boots %>% 
   group_by(Temperature, N.Treatment) %>% 
-  ggplot(aes(x = N.Treatment, y = a, color = factor(N.Treatment))) + geom_point(size = 1) +
-  theme_bw() + facet_wrap( ~ Temperature) + stat_summary(
-    mapping = aes(x = N.Treatment, y = a),
-    fun.ymin = function(z) { quantile(z,0.05) },
-    fun.ymax = function(z) { quantile(z,0.95) },
-    fun.y = median, pch=1, size = 0.5, colour="black")
+  ggplot(aes(x = N.Treatment, y = a, color = factor(N.Treatment))) + geom_point(size = 2) +
+  geom_line() + theme_bw() + facet_wrap( ~ Temperature) + 
+  stat_summary(mapping = aes(x = N.Treatment, y = a),
+               fun.ymin = function(z) { quantile(z,0.05) },
+               fun.ymax = function(z) { quantile(z,0.95) },
+               fun.y = median, pch=1, size = 0.5, colour="black")
+ggsave("figures/CS_monod_bootstrap.png")
 
-ggsave("figures/CS_monod_bootstrapped.png")
+#fit monod curve to each bootstrap
+CS_ks_umax_boot<-CS_unique_boots %>%
+  filter(N.Treatment!=0) %>%
+  group_by(Temperature, run) %>% 
+  mutate(r_estimate=a) %>% 
+  do(tidy(nls(r_estimate ~ umax* (N.Treatment / (ks+ N.Treatment)),
+              data= .,  start=list(ks = 0.5, umax = 0.05), algorithm="port", lower=list(c=0, d=0),
+              control = nls.control(maxiter=500, minFactor=1/204800000))))
+write_csv(CS_ks_umax_boot, "data-processed/CS_ks_umax_boot.csv")
+
+
+#plot monod curves with fitted line
+CS_ks_umax_fitted<-CS_unique_boots %>%
+  filter(N.Treatment!=0) %>%
+  group_by(Temperature, run) %>% 
+  mutate(r_estimate=a) %>% 
+  do(augment(nls(r_estimate ~ umax* (N.Treatment / (ks+ N.Treatment)),
+                 data= .,  start=list(ks = 0.5, umax = 0.05), algorithm="port", lower=list(c=0, d=0),
+                 control = nls.control(maxiter=100, minFactor=1/204800000))))
+
+CS_unique_boots %>% 
+  group_by(Temperature) %>% 
+  filter(N.Treatment!=0) %>%
+  ggplot(aes(x = N.Treatment, y = a, color = factor(N.Treatment))) + geom_point(size = 2) +
+  theme_bw() + facet_wrap( ~ Temperature) + 
+  geom_line(data=CS_ks_umax_fitted, aes(x=N.Treatment, y=.fitted, color=as.factor(run))) 
+ggsave("figures/CS_monod_fitted_bootstrapped.png")
+#Joey - can you help make this nice?
+
+#get range of ks and umax for each temp
+CS_summ_ks_umax<-CS_ks_umax_boot %>%
+  #filter(term=="ks") %>% 
+  group_by(Temperature, term) %>% 
+  summarize(., mn=median(estimate), uci=quantile(estimate, 0.95), lci=quantile(estimate, 0.05))
+
+CS_summ_ks_umax %>%
+  ggplot(aes(x = Temperature, y = mn)) + geom_point(size = 2) +
+  facet_wrap( ~ term, scales = "free") +
+  geom_errorbar(aes(ymin=lci, ymax=uci), width=.2)
+ggsave("figures/CS_ks_umax_boot.png")

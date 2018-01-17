@@ -260,7 +260,8 @@ ACfilteredN %>%
 ggsave("figures/AC_TPC_by_nitrate_curves.png")
 
 
-#set up the jacknifing
+
+#set up the bootstrapping
 for (j in c(13, 16, 19, 22, 25, 28)){
   for (k in c(0, 11, 22, 33, 55, 110, 220, 440)){
     test<-subset(ACfilteredN, ACfilteredN$Temperature==j & ACfilteredN$N.Treatment==k)
@@ -271,18 +272,64 @@ for (j in c(13, 16, 19, 22, 25, 28)){
                     data= .,  start=list(a=0.01),
                     control = nls.control(maxiter=100, minFactor=1/204800000))))
       boot_r[i]<-mod$estimate
-      name<-data.frame(a=unique(boot_r), Temperature=test$Temperature[1], N.Treatment=test$N.Treatment[1])
+      name<-data.frame(a=boot_r, Temperature=test$Temperature[1], N.Treatment=test$N.Treatment[1], run=1:100)
       assign(paste("ACboot_r_unique", test$Temperature[1], test$N.Treatment[1], sep ="_"), name)
     }
   }
 }
 
-# bind all of the objects that start with boot_r_unique
+# bind all of the objects that start with boot_r_unique_!
 AC_unique_boots<-do.call("rbind", mget(ls(pattern="ACboot_r_unique")))
+dim(AC_unique_boots)
 
-#plot the jacknifed data - monod
+#plot the bootstrapped data - monod
 AC_unique_boots %>% 
   group_by(Temperature, N.Treatment) %>% 
   ggplot(aes(x = N.Treatment, y = a, color = factor(N.Treatment))) + geom_point(size = 2) +
-  geom_line() + theme_bw() + facet_wrap( ~ Temperature)
-ggsave("figures/AC_monod_jacknifed.png")
+  geom_line() + theme_bw() + facet_wrap( ~ Temperature) + 
+  stat_summary(mapping = aes(x = N.Treatment, y = a),
+               fun.ymin = function(z) { quantile(z,0.05) },
+               fun.ymax = function(z) { quantile(z,0.95) },
+               fun.y = median, pch=1, size = 0.5, colour="black")
+ggsave("figures/AC_monod_bootstrap.png")
+
+#fit monod curve to each bootstrap
+AC_ks_umax_boot<-AC_unique_boots %>%
+  filter(N.Treatment!=0) %>%
+  group_by(Temperature, run) %>% 
+  mutate(r_estimate=a) %>% 
+  do(tidy(nls(r_estimate ~ umax* (N.Treatment / (ks+ N.Treatment)),
+              data= .,  start=list(ks = 1, umax = 1), algorithm="port", lower=list(c=0, d=0),
+              control = nls.control(maxiter=500, minFactor=1/204800000))))
+write_csv(AC_ks_umax_boot, "data-processed/AC_ks_umax_boot.csv")
+
+
+#plot monod curves with fitted line
+AC_ks_umax_fitted<-AC_unique_boots %>%
+  filter(N.Treatment!=0) %>%
+  group_by(Temperature, run) %>% 
+  mutate(r_estimate=a) %>% 
+  do(augment(nls(r_estimate ~ umax* (N.Treatment / (ks+ N.Treatment)),
+                 data= .,  start=list(ks = 1, umax = 1), algorithm="port", lower=list(c=0, d=0),
+                 control = nls.control(maxiter=100, minFactor=1/204800000))))
+
+AC_unique_boots %>% 
+  group_by(Temperature) %>% 
+  filter(N.Treatment!=0) %>%
+  ggplot(aes(x = N.Treatment, y = a, color = factor(N.Treatment))) + geom_point(size = 2) +
+  theme_bw() + facet_wrap( ~ Temperature) + 
+  geom_line(data=AC_ks_umax_fitted, aes(x=N.Treatment, y=.fitted, color=as.factor(run))) 
+ggsave("figures/AC_monod_fitted_bootstrapped.png")
+#Joey - can you help make this nice?
+
+#get range of ks and umax for each temp
+AC_summ_ks_umax<-AC_ks_umax_boot %>%
+  #filter(term=="ks") %>% 
+  group_by(Temperature, term) %>% 
+  summarize(., mn=median(estimate), uci=quantile(estimate, 0.95), lci=quantile(estimate, 0.05))
+
+AC_summ_ks_umax %>%
+  ggplot(aes(x = Temperature, y = mn)) + geom_point(size = 2) +
+  facet_wrap( ~ term, scales = "free") +
+  geom_errorbar(aes(ymin=lci, ymax=uci), width=.2)
+ggsave("figures/AC_ks_umax_boot.png")

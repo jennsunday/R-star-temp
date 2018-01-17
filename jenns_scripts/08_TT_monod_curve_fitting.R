@@ -65,8 +65,8 @@ TTfiltered<- TT %>%
 						  Temperature == 25 & N.Treatment == 7 |
 						  Temperature == 25 & N.Treatment == 6 & day<4.5| 
 						  Temperature == 25 & N.Treatment == 5 & day<4.5|
-						  Temperature == 25 & N.Treatment == 4 & day<3 |
-						  Temperature == 25 & N.Treatment == 3 & day<3 |
+						  Temperature == 25 & N.Treatment == 4 & day<4.5 |
+						  Temperature == 25 & N.Treatment == 3 & day<4.5 |
 						  Temperature == 25 & N.Treatment == 2 |
 						  Temperature == 25 & N.Treatment == 1 |
 						  Temperature == 25 & N.Treatment == 0 | 		
@@ -74,8 +74,8 @@ TTfiltered<- TT %>%
 								Temperature == 28 & N.Treatment == 7 |
 								Temperature == 28 & N.Treatment == 6 | 
 								Temperature == 28 & N.Treatment == 5 |
-								Temperature == 28 & N.Treatment == 4 & day<3 |
-								Temperature == 28 & N.Treatment == 3 & day<3 |
+								Temperature == 28 & N.Treatment == 4 & day<4.5 |
+								Temperature == 28 & N.Treatment == 3 & day<4.5 |
 								Temperature == 28 & N.Treatment == 2 |
 								Temperature == 28 & N.Treatment == 1 |
 								Temperature == 28 & N.Treatment == 0 ) 
@@ -120,11 +120,11 @@ TTlinear_r_aug<- TTfilteredN %>%
 
 TTN %>% 
   mutate(Particles.per.ml = log(Particles.per.ml+1)) %>% 
-  filter(N.Treatment==22) %>% 
+  filter(N.Treatment==55) %>% 
   ggplot(data = ., aes(x = day, y = Particles.per.ml, color = factor(N.Treatment))) + 
   geom_point() +
   facet_wrap( ~ Temperature, scales = "free") + geom_line() + 
-  geom_line(data=subset(TTlinear_r_aug, TTlinear_r_aug$N.Treatment==22), aes(x=day, y=.fitted, colour=factor(N.Treatment)))
+  geom_line(data=subset(TTlinear_r_aug, TTlinear_r_aug$N.Treatment==55), aes(x=day, y=.fitted, colour=factor(N.Treatment)))
   #geom_line(data=linear_r_aug, aes(x=day, y=.fitted, colour=factor(N.Treatment)))
 
 TTN %>% 
@@ -249,7 +249,7 @@ TTfilteredN %>%
 	geom_line() + theme_bw() + facet_wrap( ~ N.Treatment)
 ggsave("figures/TT_TPC_by_nitrate_curves.png")
 
-#set up the jacknifing
+#set up the bootstrapping
 for (j in c(13, 16, 19, 22, 25, 28)){
   for (k in c(0, 11, 22, 33, 55, 110, 220, 440)){
     test<-subset(TTfilteredN, TTfilteredN$Temperature==j & TTfilteredN$N.Treatment==k)
@@ -260,7 +260,7 @@ for (j in c(13, 16, 19, 22, 25, 28)){
                     data= .,  start=list(a=0.01),
                     control = nls.control(maxiter=100, minFactor=1/204800000))))
       boot_r[i]<-mod$estimate
-      name<-data.frame(a=unique(boot_r), Temperature=test$Temperature[1], N.Treatment=test$N.Treatment[1])
+      name<-data.frame(a=boot_r, Temperature=test$Temperature[1], N.Treatment=test$N.Treatment[1], run=1:100)
       assign(paste("TTboot_r_unique", test$Temperature[1], test$N.Treatment[1], sep ="_"), name)
     }
   }
@@ -268,10 +268,56 @@ for (j in c(13, 16, 19, 22, 25, 28)){
 
 # bind all of the objects that start with boot_r_unique_!
 TT_unique_boots<-do.call("rbind", mget(ls(pattern="TTboot_r_unique")))
+dim(TT_unique_boots)
 
-#plot the jacknifed data - monod
+#plot the bootstrapped data - monod
 TT_unique_boots %>% 
   group_by(Temperature, N.Treatment) %>% 
   ggplot(aes(x = N.Treatment, y = a, color = factor(N.Treatment))) + geom_point(size = 2) +
-  geom_line() + theme_bw() + facet_wrap( ~ Temperature)
-ggsave("figures/TT_monod_jacknifed.png")
+  geom_line() + theme_bw() + facet_wrap( ~ Temperature) + 
+  stat_summary(mapping = aes(x = N.Treatment, y = a),
+    fun.ymin = function(z) { quantile(z,0.05) },
+    fun.ymax = function(z) { quantile(z,0.95) },
+    fun.y = median, pch=1, size = 0.5, colour="black")
+ggsave("figures/TT_monod_bootstrap.png")
+
+#fit monod curve to each bootstrap
+TT_ks_umax_boot<-TT_unique_boots %>%
+  filter(N.Treatment!=0) %>%
+  group_by(Temperature, run) %>% 
+  mutate(r_estimate=a) %>% 
+  do(tidy(nls(r_estimate ~ umax* (N.Treatment / (ks+ N.Treatment)),
+              data= .,  start=list(ks = 1, umax = 1), algorithm="port", lower=list(c=0, d=0),
+              control = nls.control(maxiter=500, minFactor=1/204800000))))
+write_csv(TT_ks_umax_boot), "data-processed/TT_ks_umax_boot.csv")
+
+
+#plot monod curves with fitted line
+TT_ks_umax_fitted<-TT_unique_boots %>%
+  filter(N.Treatment!=0) %>%
+  group_by(Temperature, run) %>% 
+  mutate(r_estimate=a) %>% 
+  do(augment(nls(r_estimate ~ umax* (N.Treatment / (ks+ N.Treatment)),
+                 data= .,  start=list(ks = 1, umax = 1), algorithm="port", lower=list(c=0, d=0),
+                 control = nls.control(maxiter=100, minFactor=1/204800000))))
+
+TT_unique_boots %>% 
+  group_by(Temperature) %>% 
+  ggplot(aes(x = N.Treatment, y = a, color = factor(N.Treatment))) + geom_point(size = 2) +
+  theme_bw() + facet_wrap( ~ Temperature) + 
+  geom_line(data=TT_ks_umax_fitted, aes(x=N.Treatment, y=.fitted, color=as.factor(run))) 
+ggsave("figures/TT_monod_fitted_bootstrapped.png")
+
+#Joey - can you help make this nice?
+
+#get range of ks and umax for each temp
+TT_summ_ks_umax<-TT_ks_umax_boot %>%
+  #filter(term=="ks") %>% 
+  group_by(Temperature, term) %>% 
+  summarize(., mn=median(estimate), uci=quantile(estimate, 0.95), lci=quantile(estimate, 0.05))
+
+TT_summ_ks_umax %>%
+  ggplot(aes(x = Temperature, y = mn)) + geom_point(size = 2) +
+  facet_wrap( ~ term, scales = "free") +
+  geom_errorbar(aes(ymin=lci, ymax=uci), width=.2)
+ggsave("figures/TT_ks_umax_boot.png")

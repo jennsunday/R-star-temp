@@ -41,15 +41,15 @@ CHfiltered<- CH %>%
            Temperature == 13 & N.Treatment == 2 & day>2.5|
            Temperature == 13 & N.Treatment == 1 & day>1.5|
            Temperature == 13 & N.Treatment == 0 & day>1.5|
-           Temperature == 16 & N.Treatment == 8 & day<7 & day>0.5|
-           Temperature == 16 & N.Treatment == 7 & day<7 & day>0.5|
-           Temperature == 16 & N.Treatment == 6 & day<7 & day>0.5| 
-           Temperature == 16 & N.Treatment == 5 & day<7 & day>0.5|
-           Temperature == 16 & N.Treatment == 4 & day<6 & day>1.5|
-           Temperature == 16 & N.Treatment == 3 & day<6 & day>0.5|
-           Temperature == 16 & N.Treatment == 2 & day<6 & day>1.5|
-           Temperature == 16 & N.Treatment == 1 & day<6 & day>1.5|
-           Temperature == 16 & N.Treatment == 0 & day<6 & day>1.5|
+           Temperature == 16 & N.Treatment == 8 & day<7 |
+           Temperature == 16 & N.Treatment == 7 & day<7 |
+           Temperature == 16 & N.Treatment == 6 & day<7 | 
+           Temperature == 16 & N.Treatment == 5 & day<7 |
+           Temperature == 16 & N.Treatment == 4 & day<6 |
+           Temperature == 16 & N.Treatment == 3 & day<6 |
+           Temperature == 16 & N.Treatment == 2 & day<6 |
+           Temperature == 16 & N.Treatment == 1 & day<6 |
+           Temperature == 16 & N.Treatment == 0 & day<4 |
            Temperature == 19 & N.Treatment == 8 & day<6|
            Temperature == 19 & N.Treatment == 7 & day<6|
            Temperature == 19 & N.Treatment == 6 & day<6| 
@@ -57,30 +57,30 @@ CHfiltered<- CH %>%
            Temperature == 19 & N.Treatment == 4 & day<6|
            Temperature == 19 & N.Treatment == 3 & day<6 |
            Temperature == 19 & N.Treatment == 2 & day<6 |
-           Temperature == 19 & N.Treatment == 1 & day<5 & day>1.5|
-           Temperature == 19 & N.Treatment == 0 & day<6 & day>1.5|
+           Temperature == 19 & N.Treatment == 1 & day<5 |
+           Temperature == 19 & N.Treatment == 0 & day<6 |
            Temperature == 22 & N.Treatment == 8 & day<5 |
-           Temperature == 22 & N.Treatment == 7 & day<5 |
-           Temperature == 22 & N.Treatment == 6 & day<6 | 
+           Temperature == 22 & N.Treatment == 7 & day<4.1 |
+           Temperature == 22 & N.Treatment == 6 & day<5 | 
            Temperature == 22 & N.Treatment == 5 & day<5 |
-           Temperature == 22 & N.Treatment == 4 & day<6 |
+           Temperature == 22 & N.Treatment == 4 & day<5 |
            Temperature == 22 & N.Treatment == 3 & day<5 |
            Temperature == 22 & N.Treatment == 2 & day<5 |
            Temperature == 22 & N.Treatment == 1 & day<5 & day>1.5|
            Temperature == 22 & N.Treatment == 0 & day<5 & day>1.5|
-           Temperature == 25 & N.Treatment == 8 & day<5 |
-           Temperature == 25 & N.Treatment == 7 & day<5 |
-           Temperature == 25 & N.Treatment == 6 & day<5 | 
-           Temperature == 25 & N.Treatment == 5 & day<5 |
-           Temperature == 25 & N.Treatment == 4 & day<4.5 |
+           Temperature == 25 & N.Treatment == 8 & day<4.1 |
+           Temperature == 25 & N.Treatment == 7 & day<4.1 |
+           Temperature == 25 & N.Treatment == 6 & day<4.1 | 
+           Temperature == 25 & N.Treatment == 5 & day<4.1 |
+           Temperature == 25 & N.Treatment == 4 & day<4 |
            Temperature == 25 & N.Treatment == 3 & day<4 |
            Temperature == 25 & N.Treatment == 2 & day<4 |
            Temperature == 25 & N.Treatment == 1 & day<4 & day>1.5|
            Temperature == 25 & N.Treatment == 0 & day<3.8 & day>1.5|
-           Temperature == 28 & N.Treatment == 8 & day<5 |
-           Temperature == 28 & N.Treatment == 7 & day<5 |
-           Temperature == 28 & N.Treatment == 6 & day<5 | 
-           Temperature == 28 & N.Treatment == 5 & day<5 |
+           Temperature == 28 & N.Treatment == 8 & day<4 |
+           Temperature == 28 & N.Treatment == 7 & day<4 |
+           Temperature == 28 & N.Treatment == 6 & day<4 | 
+           Temperature == 28 & N.Treatment == 5 & day<4 |
            Temperature == 28 & N.Treatment == 4 & day<4 |
            Temperature == 28 & N.Treatment == 3 & day<4 |
            Temperature == 28 & N.Treatment == 2 & day<4 |
@@ -135,11 +135,11 @@ linear_r_aug<- CHfilteredN %>%
 
 CHN %>% 
   mutate(Particles.per.ml = log(Particles.per.ml)) %>% 
-  filter(N.Treatment %in% c(0,11,22)) %>% 
+  filter(N.Treatment %in% c(220)) %>% 
   ggplot(data = ., aes(x = day, y = Particles.per.ml, color = factor(N.Treatment))) + 
   geom_point() +
   facet_wrap( ~ Temperature, scales = "free") + geom_line() + 
-  geom_line(data=subset(linear_r_aug, linear_r_aug$N.Treatment %in% c(0,11,22)), aes(x=day, y=.fitted, colour=factor(N.Treatment)))
+  geom_line(data=subset(linear_r_aug, linear_r_aug$N.Treatment%in% c(55,110,220,440)), aes(x=day, y=.fitted, colour=factor(N.Treatment)))
   #geom_line(data=linear_r_aug, aes(x=day, y=.fitted, colour=factor(N.Treatment)))
 
 
@@ -242,9 +242,7 @@ CH_r <- CHfilteredN %>%
   do(tidy(nls(Particles.per.ml ~ 75 * (1+a)^(Hours.since.Innoc),
               data= .,  start=list(a=0.01),
               control = nls.control(maxiter=100, minFactor=1/204800000)))) 
-
 write_csv(CH_r, "data-processed/fitted_r_CH_from_2015.csv")
-
 
 CHfilteredN %>% 
   group_by(Temperature, N.Treatment) %>% 
@@ -256,7 +254,7 @@ CHfilteredN %>%
 ggsave("figures/CH_TPC_by_nitrate_curves.png")
 
 
-#set up the jacknifing
+#set up the bootstrapping
 for (j in c(13, 16, 19, 22, 25, 28)){
   for (k in c(0, 11, 22, 33, 55, 110, 220, 440)){
     test<-subset(CHfilteredN, CHfilteredN$Temperature==j & CHfilteredN$N.Treatment==k)
@@ -267,18 +265,64 @@ for (j in c(13, 16, 19, 22, 25, 28)){
                     data= .,  start=list(a=0.01),
                     control = nls.control(maxiter=100, minFactor=1/204800000))))
       boot_r[i]<-mod$estimate
-      name<-data.frame(a=unique(boot_r), Temperature=test$Temperature[1], N.Treatment=test$N.Treatment[1])
+      name<-data.frame(a=boot_r, Temperature=test$Temperature[1], N.Treatment=test$N.Treatment[1], run=1:100)
       assign(paste("CHboot_r_unique", test$Temperature[1], test$N.Treatment[1], sep ="_"), name)
     }
   }
 }
 
-# bind all of the objects that start with boot_r_unique
+# bind all of the objects that start with boot_r_unique_!
 CH_unique_boots<-do.call("rbind", mget(ls(pattern="CHboot_r_unique")))
+dim(CH_unique_boots)
 
-#plot the jacknifed data - monod
+#plot the bootstrapped data - monod
 CH_unique_boots %>% 
   group_by(Temperature, N.Treatment) %>% 
   ggplot(aes(x = N.Treatment, y = a, color = factor(N.Treatment))) + geom_point(size = 2) +
-  geom_line() + theme_bw() + facet_wrap( ~ Temperature)
-ggsave("figures/CH_monod_jacknifed.png")
+  geom_line() + theme_bw() + facet_wrap( ~ Temperature) + 
+  stat_summary(mapping = aes(x = N.Treatment, y = a),
+               fun.ymin = function(z) { quantile(z,0.05) },
+               fun.ymax = function(z) { quantile(z,0.95) },
+               fun.y = median, pch=1, size = 0.5, colour="black")
+ggsave("figures/CH_monod_bootstrap.png")
+
+#fit monod curve to each bootstrap
+CH_ks_umax_boot<-CH_unique_boots %>%
+  filter(N.Treatment!=0) %>%
+  group_by(Temperature, run) %>% 
+  mutate(r_estimate=a) %>% 
+  do(tidy(nls(r_estimate ~ umax* (N.Treatment / (ks+ N.Treatment)),
+              data= .,  start=list(ks = 1, umax = 1), algorithm="port", lower=list(c=0, d=0),
+              control = nls.control(maxiter=500, minFactor=1/204800000))))
+write_csv(CH_ks_umax_boot, "data-processed/CH_ks_umax_boot.csv")
+
+
+#plot monod curves with fitted line
+CH_ks_umax_fitted<-CH_unique_boots %>%
+  filter(N.Treatment!=0) %>%
+  group_by(Temperature, run) %>% 
+  mutate(r_estimate=a) %>% 
+  do(augment(nls(r_estimate ~ umax* (N.Treatment / (ks+ N.Treatment)),
+                 data= .,  start=list(ks = 1, umax = 1), algorithm="port", lower=list(c=0, d=0),
+                 control = nls.control(maxiter=100, minFactor=1/204800000))))
+
+CH_unique_boots %>% 
+  group_by(Temperature) %>% 
+  filter(N.Treatment!=0) %>%
+  ggplot(aes(x = N.Treatment, y = a, color = factor(N.Treatment))) + geom_point(size = 2) +
+  theme_bw() + facet_wrap( ~ Temperature) + 
+  geom_line(data=CH_ks_umax_fitted, aes(x=N.Treatment, y=.fitted, color=as.factor(run))) 
+ggsave("figures/CH_monod_fitted_bootstrapped.png")
+#Joey - can you help make this nice?
+
+#get range of ks and umax for each temp
+CH_summ_ks_umax<-CH_ks_umax_boot %>%
+  #filter(term=="ks") %>% 
+  group_by(Temperature, term) %>% 
+  summarize(., mn=median(estimate), uci=quantile(estimate, 0.95), lci=quantile(estimate, 0.05))
+
+CH_summ_ks_umax %>%
+  ggplot(aes(x = Temperature, y = mn)) + geom_point(size = 2) +
+         facet_wrap( ~ term, scales = "free") +
+         geom_errorbar(aes(ymin=lci, ymax=uci), width=.2)
+ggsave("figures/CH_ks_umax_boot.png")
