@@ -27,7 +27,7 @@ nbcurve<-function(temp,z,w,a,b){
 }
 
 # Create new vector of unique curve.id values
-curve.id.list<-unique(dat.full$curve.id)	
+curve.id.list<-unique(dat.full$curve.id)	# careful - this may change the order of the unique id - needs to be fixed
 
 # Create empty vectors to populate with parameter values and trait estimates
 z.list<-rep(NA, length(curve.id.list))				#Parameter 'z'

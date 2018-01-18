@@ -110,6 +110,7 @@ dim(edata)
 edata$species<-as.factor(edata$species)
 edata$temp<-as.factor(edata$temp)
 
+#flat line
 #plot nitrate by temp and species along day and fit equilibrium flat line model
 par(mfcol=c(6,4))
 par(mar=c(3,3,0,0), oma=c(1,1,0.5, 0.5))

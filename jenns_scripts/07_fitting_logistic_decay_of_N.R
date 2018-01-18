@@ -75,11 +75,7 @@ controlfit <- function(curvedata){
   return(output)
 }
 
-fittedCRmodel <- fitOdeModel(CRmodel, whichpar = fittedparms, curvedata$day, select(curvedata, N),
-                             debuglevel = 0, fn = ssqOdeModel,
-                             method = "PORT", lower = LowerBound, upper = UpperBound, scale.par = ParamScaling,
-                             control = list(trace = T))
-                             
+
 
 # plot function -----------------------------------------------------------
 plotsinglefit <- function(curvedata){
@@ -118,6 +114,12 @@ plotsinglefit <- function(curvedata){
   # Plot the results of our model fitting.
   with(observeddata, plot(N~obstime, ylim=c(0, 12)))
   with(simulateddata, lines(N~time, col=2))
+  
+  #output fitted parameters
+  r <- coef(fittedCRmodel)[1]
+  K <- coef(fittedCRmodel)[2]
+  output <- data.frame(r, K)
+  return(output)
 }
 
 
@@ -142,9 +144,9 @@ ParamScaling <- 0.001 / UpperBound
 
 for(i in 1:4){
   curvedata<-subset(cdata, cdata$temp==3 & cdata$species==i)
-  plotsinglefit(curvedata)
-  resultsr[i]<-controlfit(curvedata)$r[1] #ask Joey for help extracting results without fitting model 3 times
-  resultsk[i]<-controlfit(curvedata)$K[1]
+ fitgrowth<-plotsinglefit(curvedata)
+  resultsr[i]<-fitgrowth$r[1]
+  resultsk[i]<-fitgrowth$K[1]
   
   tempdata<-subset(edata, edata$temp==3 & edata$species==i)
   model<-lme(nitrate~1, data=tempdata, random=~1|day)
@@ -163,9 +165,9 @@ ParamScaling <- 0.001 / UpperBound
 
 for(i in 1:4){
   curvedata<-subset(cdata, cdata$temp==10 & cdata$species==i)
-  plotsinglefit(curvedata)
-  resultsr[i]<-controlfit(curvedata)$r[1]
-  resultsk[i]<-controlfit(curvedata)$K[1]
+  fitgrowth<-plotsinglefit(curvedata)
+  resultsr[i]<-fitgrowth$r[1]
+  resultsk[i]<-fitgrowth$K[1]
   
   tempdata<-subset(edata, edata$temp==10 & edata$species==i)
   model<-lme(nitrate~1, data=tempdata, random=~1|day)
@@ -184,9 +186,9 @@ ParamScaling <- 0.001 / UpperBound
 
 for(i in 1:4){
   curvedata<-subset(cdata, cdata$temp==17 & cdata$species==i)
-  plotsinglefit(curvedata)
-  resultsr[i]<-controlfit(curvedata)$r[1]
-  resultsk[i]<-controlfit(curvedata)$K[1]
+  fitgrowth<-plotsinglefit(curvedata)
+  resultsr[i]<-fitgrowth$r[1]
+  resultsk[i]<-fitgrowth$K[1]
   
   tempdata<-subset(edata, edata$temp==17 & edata$species==i)
   model<-lme(nitrate~1, data=tempdata, random=~1|day)
@@ -205,9 +207,9 @@ ParamScaling <- 0.001 / UpperBound
 
 for(i in 1:4){
   curvedata<-subset(cdata, cdata$temp==24 & cdata$species==i)
-  plotsinglefit(curvedata)
-  resultsr[i]<-controlfit(curvedata)$r[1]
-  resultsk[i]<-controlfit(curvedata)$K[1]
+  fitgrowth<-plotsinglefit(curvedata)
+  resultsr[i]<-fitgrowth$r[1]
+  resultsk[i]<-fitgrowth$K[1]
   
   tempdata<-subset(edata, edata$temp==24 & edata$species==i)
   model<-lme(nitrate~1, data=tempdata, random=~1|day)
@@ -226,9 +228,9 @@ ParamScaling <- 0.001 / UpperBound
 
 for(i in 1:4){
   curvedata<-subset(cdata, cdata$temp==31 & cdata$species==i)
-  plotsinglefit(curvedata)
-  resultsr[i]<-controlfit(curvedata)$r[1]
-  resultsk[i]<-controlfit(curvedata)$K[1]
+  fitgrowth<-plotsinglefit(curvedata)
+  resultsr[i]<-fitgrowth$r[1]
+  resultsk[i]<-fitgrowth$K[1]
   
   tempdata<-subset(edata, edata$temp==31 & edata$species==i)
   model<-lme(nitrate~1, data=tempdata, random=~1|day)
@@ -247,9 +249,9 @@ ParamScaling <- 0.001 / UpperBound
 
 for(i in 1:4){
   curvedata<-subset(cdata, cdata$temp==38 & cdata$species==i)
-  plotsinglefit(curvedata)
-  resultsr[i]<-controlfit(curvedata)$r[1]
-  resultsk[i]<-controlfit(curvedata)$K[1]
+  fitgrowth<-plotsinglefit(curvedata)
+  resultsr[i]<-fitgrowth$r[1]
+  resultsk[i]<-fitgrowth$K[1]
   
   tempdata<-subset(edata, edata$temp==38 & edata$species==i)
   model<-lme(nitrate~1, data=tempdata, random=~1|day)

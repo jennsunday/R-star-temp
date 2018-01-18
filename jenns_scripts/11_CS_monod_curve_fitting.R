@@ -33,14 +33,14 @@ CSN %>%
 CSfiltered<- CS %>% 
   mutate(day = Hours.since.Innoc/24) %>% 
   #filter(day>0.5) %>% 
-  filter(  Temperature == 13 & N.Treatment == 8 & day<6.5|
-           Temperature == 13 & N.Treatment == 7 & day<6.5|
-           Temperature == 13 & N.Treatment == 6 & day<6.5 & day>2| 
-           Temperature == 13 & N.Treatment == 5 & day<6.5|
-           Temperature == 13 & N.Treatment == 4 & day<6.5|
-           Temperature == 13 & N.Treatment == 3 & day<6.5|
-           Temperature == 13 & N.Treatment == 2 & day<7 & day>2|
-           Temperature == 13 & N.Treatment == 1 & day<7 & day>2|
+  filter(  Temperature == 13 & N.Treatment == 8 & day<6.5 & day>0.5|
+           Temperature == 13 & N.Treatment == 7 & day<6.5 & day>0.5|
+           Temperature == 13 & N.Treatment == 6 & day<6.5 & day>0.5| 
+           Temperature == 13 & N.Treatment == 5 & day<6.5 & day>0.5|
+           Temperature == 13 & N.Treatment == 4 & day<6.5 & day>0.5|
+           Temperature == 13 & N.Treatment == 3 & day<6.5 & day>0.5|
+           Temperature == 13 & N.Treatment == 2 & day<6.5 & day>0.5|
+           Temperature == 13 & N.Treatment == 1 & day<5.5 & day>0.5|
            Temperature == 13 & N.Treatment == 0 & day<5.5 & day>0.5|
            Temperature == 16 & N.Treatment == 8 & day<6|
            Temperature == 16 & N.Treatment == 7 & day<6|
@@ -134,13 +134,13 @@ linear_r_aug<- CSfilteredN %>%
   do(augment(lm(Particles.per.ml ~ day, data=.))) 
 
 CSN %>% 
-  #mutate(Particles.per.ml = log(Particles.per.ml)) %>% 
-  filter(N.Treatment %in% c(330,440)) %>% 
-  filter(Temperature %in% c(25,28)) %>% 
+  mutate(Particles.per.ml = log(Particles.per.ml)) %>% 
+  #filter(N.Treatment %in% c(330,440)) %>% 
+  filter(Temperature %in% c(13)) %>% 
   ggplot(data = ., aes(x = day, y = Particles.per.ml, color = factor(N.Treatment))) + 
            geom_point() +
-  facet_wrap( ~ Temperature, scales = "free") + geom_line() + 
-  geom_line(data=subset(linear_r_aug, linear_r_aug$N.Treatment==11), aes(x=day, y=.fitted, colour=factor(N.Treatment)))
+  facet_wrap( ~ N.Treatment, scales = "free") + geom_line() + 
+  geom_line(data=subset(linear_r_aug, linear_r_aug$Temperature %in% c(13)), aes(x=day, y=.fitted, colour=factor(N.Treatment)))
   #geom_line(data=linear_r_aug, aes(x=day, y=.fitted, colour=factor(N.Treatment)))
 
 ggsave("figures/CS_linear_R_fits.png")
@@ -230,7 +230,7 @@ with(CS_rstar_norm_summ, segments(Temperature, lci,
 # previous coding working in non-logged data, fitting exponential curve
 CSfilteredN %>% 
   group_by(Temperature, N.Treatment) %>% 
-  do(tidy(nls(Particles.per.ml ~ 75 * (1+a)^(Hours.since.Innoc),
+  do(tidy(nls(Particles.per.ml ~ 75 * (1+a)^(day),
               data= .,  start=list(a=0.01),
               control = nls.control(maxiter=100, minFactor=1/204800000)))) %>% 
   ungroup() %>% 
@@ -241,7 +241,7 @@ ggsave("figures/CS_monod_curves.png")
 
 CS_r <- CSfilteredN %>% 
   group_by(Temperature, N.Treatment) %>% 
-  do(tidy(nls(Particles.per.ml ~ 75 * (1+a)^(Hours.since.Innoc),
+  do(tidy(nls(Particles.per.ml ~ 75 * (1+a)^(day),
               data= .,  start=list(a=0.01),
               control = nls.control(maxiter=100, minFactor=1/204800000)))) 
 
@@ -250,7 +250,7 @@ write_csv(CS_r, "data-processed/fitted_r_CS_from_2015.csv")
 
 CSfilteredN %>% 
   group_by(Temperature, N.Treatment) %>% 
-  do(tidy(nls(Particles.per.ml ~ 75 * (1+a)^(Hours.since.Innoc),
+  do(tidy(nls(Particles.per.ml ~ 75 * (1+a)^(day),
               data= .,  start=list(a=0.01),
               control = nls.control(maxiter=100, minFactor=1/204800000)))) %>% 
   ggplot(aes(x = Temperature, y = estimate, color = factor(Temperature))) + geom_point(size = 4) +
@@ -265,7 +265,7 @@ for (j in c(13, 16, 19, 22, 25, 28)){
     boot_r<-1:100
     for(i in 1:100){
       mod<-sample_n(test, length(test$day)-1) %>% #take a sample of 1 - total # of days
-        do(tidy(nls(Particles.per.ml ~ 75 * (1+a)^(Hours.since.Innoc),
+        do(tidy(nls(Particles.per.ml ~ 75 * (1+a)^(day),
                     data= .,  start=list(a=0.01),
                     control = nls.control(maxiter=100, minFactor=1/204800000))))
       boot_r[i]<-mod$estimate
@@ -293,10 +293,11 @@ ggsave("figures/CS_monod_bootstrap.png")
 #fit monod curve to each bootstrap
 CS_ks_umax_boot<-CS_unique_boots %>%
   filter(N.Treatment!=0) %>%
+  filter(N.Treatment!=330) %>%
   group_by(Temperature, run) %>% 
   mutate(r_estimate=a) %>% 
   do(tidy(nls(r_estimate ~ umax* (N.Treatment / (ks+ N.Treatment)),
-              data= .,  start=list(ks = 0.5, umax = 0.05), algorithm="port", lower=list(c=0, d=0),
+              data= .,  start=list(ks = 0.2, umax = 1), algorithm="port", lower=list(c=0, d=0),
               control = nls.control(maxiter=500, minFactor=1/204800000))))
 write_csv(CS_ks_umax_boot, "data-processed/CS_ks_umax_boot.csv")
 
@@ -304,10 +305,11 @@ write_csv(CS_ks_umax_boot, "data-processed/CS_ks_umax_boot.csv")
 #plot monod curves with fitted line
 CS_ks_umax_fitted<-CS_unique_boots %>%
   filter(N.Treatment!=0) %>%
+  filter(N.Treatment!=330) %>%
   group_by(Temperature, run) %>% 
   mutate(r_estimate=a) %>% 
   do(augment(nls(r_estimate ~ umax* (N.Treatment / (ks+ N.Treatment)),
-                 data= .,  start=list(ks = 0.5, umax = 0.05), algorithm="port", lower=list(c=0, d=0),
+                 data= .,  start=list(ks = 0.2, umax = 1), algorithm="port", lower=list(c=0, d=0),
                  control = nls.control(maxiter=100, minFactor=1/204800000))))
 
 CS_unique_boots %>% 
@@ -330,3 +332,4 @@ CS_summ_ks_umax %>%
   facet_wrap( ~ term, scales = "free") +
   geom_errorbar(aes(ymin=lci, ymax=uci), width=.2)
 ggsave("figures/CS_ks_umax_boot.png")
+write_csv(CS_summ_ks_umax, "data-processed/CS_summ_ks_umax.csv")

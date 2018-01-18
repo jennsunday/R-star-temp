@@ -223,7 +223,7 @@ write_csv(TT_rstar_norm_summ, "data-processed/TT_rstar.csv")
 
 TTfilteredN %>% 
 	group_by(Temperature, N.Treatment) %>% 
-	do(tidy(nls(Particles.per.ml ~ 75 * (1+a)^(Hours.since.Innoc),
+	do(tidy(nls(Particles.per.ml ~ 75 * (1+a)^(day),
 							data= .,  start=list(a=0.01),
 							control = nls.control(maxiter=100, minFactor=1/204800000)))) %>% 
 	ungroup() %>% 
@@ -233,7 +233,7 @@ ggsave("figures/TT_monod_curves.png")
 
 TT_r <- TTfilteredN %>% 
 	group_by(Temperature, N.Treatment) %>% 
-	do(tidy(nls(Particles.per.ml ~ 75 * (1+a)^(Hours.since.Innoc),
+	do(tidy(nls(Particles.per.ml ~ 75 * (1+a)^(day),
 							data= .,  start=list(a=0.01),
 							control = nls.control(maxiter=100, minFactor=1/204800000)))) 
 
@@ -242,7 +242,7 @@ write_csv(TT_r, "data-processed/fitted_r_TT_from_2015.csv")
 
 TTfilteredN %>% 
 	group_by(Temperature, N.Treatment) %>% 
-	do(tidy(nls(Particles.per.ml ~ 75 * (1+a)^(Hours.since.Innoc),
+	do(tidy(nls(Particles.per.ml ~ 75 * (1+a)^(day),
 							data= .,  start=list(a=0.01),
 							control = nls.control(maxiter=100, minFactor=1/204800000)))) %>% 
 	ggplot(aes(x = Temperature, y = estimate, color = factor(Temperature))) + geom_point(size = 4) +
@@ -256,7 +256,7 @@ for (j in c(13, 16, 19, 22, 25, 28)){
     boot_r<-1:100
     for(i in 1:100){
       mod<-sample_n(test, length(test$day)-1) %>%
-        do(tidy(nls(Particles.per.ml ~ 75 * (1+a)^(Hours.since.Innoc),
+        do(tidy(nls(Particles.per.ml ~ 75 * (1+a)^(day),
                     data= .,  start=list(a=0.01),
                     control = nls.control(maxiter=100, minFactor=1/204800000))))
       boot_r[i]<-mod$estimate
@@ -289,7 +289,7 @@ TT_ks_umax_boot<-TT_unique_boots %>%
   do(tidy(nls(r_estimate ~ umax* (N.Treatment / (ks+ N.Treatment)),
               data= .,  start=list(ks = 1, umax = 1), algorithm="port", lower=list(c=0, d=0),
               control = nls.control(maxiter=500, minFactor=1/204800000))))
-write_csv(TT_ks_umax_boot), "data-processed/TT_ks_umax_boot.csv")
+write_csv(TT_ks_umax_boot, "data-processed/TT_ks_umax_boot.csv")
 
 
 #plot monod curves with fitted line
