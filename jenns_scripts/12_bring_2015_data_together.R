@@ -1,3 +1,9 @@
+library(tidyverse)
+library(broom)
+library(minpack.lm)
+library(purrr)
+library(stringr)
+library(dplyr)
 
 TT_ks_umax<-cbind(read_csv("data-processed/TT_ks_umax_boot.csv"), Species="TT")
 CS_ks_umax<-cbind(read_csv("data-processed/CS_ks_umax_boot.csv"), Species="CS")
@@ -13,6 +19,7 @@ all_ks_umax %>%
   ggplot(aes(x = Temperature, y = estimate, color = factor(Species))) + geom_point(size = 4) +
   theme_bw() + facet_wrap(~term, scales = "free") + 
   geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=.2)
+
 ggsave("figures/all_ks_umax.png")
 
 # estimate R-star ------------
@@ -32,9 +39,6 @@ write_csv(all_rstar, "data-processed/all_rstar.csv")
 all_rstar%>% 
   ggplot(aes(x = Temperature, y = rstar, color=factor(Species))) + geom_point(size = 4) +
   facet_wrap(~Species, scales = "free")
-
-
-
 
 
 #next redo this by pulling 1000 iterations from umax and k estimates with norm dist with se

@@ -114,7 +114,7 @@ plotsinglefit <- function(curvedata){
   simulateddata <- ysim
   
   # Plot the results of our model fitting.
-  with(observeddata, plot(P~obstime, ylim=c(0, max(P)*2)))
+  with(observeddata, points(P~obstime, ylim=c(0, max(P)*2)))
   with(simulateddata, lines(P~time, col=2))
   
   r <- coef(fittedCRmodel)[1]

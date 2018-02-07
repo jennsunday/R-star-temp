@@ -120,7 +120,7 @@ TTlinear_r_aug<- TTfilteredN %>%
 
 TTN %>% 
   mutate(Particles.per.ml = log(Particles.per.ml+1)) %>% 
-  filter(N.Treatment==55) %>% 
+  #filter(N.Treatment==55) %>% 
   ggplot(data = ., aes(x = day, y = Particles.per.ml, color = factor(N.Treatment))) + 
   geom_point() +
   facet_wrap( ~ Temperature, scales = "free") + geom_line() + 
@@ -245,9 +245,9 @@ TTfilteredN %>%
 	do(tidy(nls(Particles.per.ml ~ 75 * (1+a)^(day),
 							data= .,  start=list(a=0.01),
 							control = nls.control(maxiter=100, minFactor=1/204800000)))) %>% 
-	ggplot(aes(x = Temperature, y = estimate, color = factor(Temperature))) + geom_point(size = 4) +
-	geom_line() + theme_bw() + facet_wrap( ~ N.Treatment)
-ggsave("figures/TT_TPC_by_nitrate_curves.png")
+	ggplot(aes(x = Temperature, y = estimate, color = factor(N.Treatment))) + geom_point(size = 2) +
+	geom_line() + theme_bw()
+ggsave("figures/TT_TPC_by_nitrate_curves.png", length=5, width=5)
 
 #set up the bootstrapping
 for (j in c(13, 16, 19, 22, 25, 28)){
@@ -280,6 +280,16 @@ TT_unique_boots %>%
     fun.ymax = function(z) { quantile(z,0.95) },
     fun.y = median, pch=1, size = 0.5, colour="black")
 ggsave("figures/TT_monod_bootstrap.png")
+
+#plot the bootstrapped data - TPC by N
+TT_unique_boots %>% 
+  group_by(Temperature, N.Treatment) %>% 
+  ggplot(aes(x = Temperature, y = a, color = factor(N.Treatment))) + geom_point(size = 2) +
+  theme_bw() + facet_wrap(~N.Treatment) +
+  stat_summary(mapping = aes(x = Temperature, y = a),
+               fun.ymin = function(z) { quantile(z,0.05) },
+               fun.ymax = function(z) { quantile(z,0.95) },
+               fun.y = median, pch=1, size = 0.5, colour="black")
 
 #fit monod curve to each bootstrap
 TT_ks_umax_boot<-TT_unique_boots %>%

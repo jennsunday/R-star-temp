@@ -1,3 +1,4 @@
+#goal: plot r-star estimates from 2015 with r-star estimates from 2017
 
 all_rstar_2105<-read_csv("data-processed/all_rstar.csv")
 obs_rstar_2017<-read_csv("data-processed/logistic_N_decay_fits_r-star.csv")

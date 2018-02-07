@@ -1,5 +1,13 @@
 #goal: fit Schoolfield TPC to umax data from 2015 
-#to get an estiamte of umax for 200 temps between 3 and 38, 100 runs from 4 species
+#to get an estimate of umax for 200 temps between 3 and 38, 100 runs from 4 species
+#currently just TT
+
+library(tidyverse)
+library(broom)
+library(minpack.lm)
+library(purrr)
+library(stringr)
+
 #read in data
 TT_ks_umax<-cbind(read_csv("data-processed/TT_ks_umax_boot.csv"), Species="TT")
 CS_ks_umax<-cbind(read_csv("data-processed/CS_ks_umax_boot.csv"), Species="CS")
@@ -11,6 +19,7 @@ all_umax<- all_ks_umax %>%
 
 
 # get data in order -------------------------------------------------------
+#make a subset of first run, all temperatures, change temp to Kelvins
 current_dataset <- all_umax %>% 
   rename(umax=estimate) %>%
   filter(run==1, Species=="TT") %>%
@@ -18,7 +27,7 @@ current_dataset <- all_umax %>%
   mutate(K = Temperature + 273.15) %>% 
   rename(OriginalTraitValue = umax) %>% 
   select(-Temperature)
-current_dataset$OriginalTraitValue[current_dataset$OriginalTraitValue == 0] <- 1
+current_dataset$OriginalTraitValue[current_dataset$OriginalTraitValue == 0] <- 1 #change zeros to 1s
 
 ## If there are negative values, substract the minimum value
 MinVal <- NA
@@ -140,7 +149,7 @@ allruns_dataset <- all_umax %>%
   rename(OriginalTraitValue = umax)
 
 with(allruns_dataset, plot(OriginalTraitValue~Temperature, 
-                           type="n", xlim=c(3, 38), ylim=c(0, max(OriginalTraitValue)*1.1)))
+                           xlim=c(3, 38), ylim=c(0, max(OriginalTraitValue)*1.1)))
 
 for(i in 1:100){
   current_dataset<- allruns_dataset %>%
@@ -158,14 +167,7 @@ schoolfield_nls <- nlsLM(
 if(!is.na(schoolfield_nls[1])) 
 { 
   
-  # Collect the parameter estimates..
-  # if (!is.na(MinVal)){ ## Add MinVal if it was substracted
-  # 	B0Bug <- c(B0Bug,TRUE)
-  # 	B0_sch <- c(B0_sch, (coef(schoolfield_nls)["B0"]+MinVal))
-  # }else {
-  # 	B0Bug <- c(B0Bug,FALSE)
-  # 	B0_sch <- c(B0_sch, coef(schoolfield_nls)["B0"])
-  # }
+  # Collect the parameter estimates by adding the currect estimate to the vector of previous estimates
   E_sch <- c(E_sch, coef(schoolfield_nls)["E"])
   E_D_sch <- c(E_D_sch, coef(schoolfield_nls)["E_D"])
   T_h_sch <- c(T_h_sch, coef(schoolfield_nls)["T_h"])
@@ -201,13 +203,6 @@ if(!is.na(schoolfield_nls[1]))
   }
   
   T_pk_sch <- c(T_pk_sch, current_dataset$K[j])
-  # if (!is.na(MinVal)){ ## Add MinVal if it was substracted
-  # 	P_pkBug <- c(P_pkBug,TRUE)
-  # P_pk_sch <- c(P_pk_sch, (curr_prediction[j]+MinVal))
-  # }else {
-  # 	P_pkBug <- c(P_pkBug,FALSE)
-  # 	P_pk_sch <- c(P_pk_sch, curr_prediction[j])
-  # }
 }	
 
 
@@ -220,24 +215,8 @@ if(!is.na(schoolfield_nls[1]))
 #	- the original id number
 #   - the species name
 #   - the model
-# output_name <- paste(
-# 	current_dataset$FinalID[1], 
-# 	current_dataset$Consumer[1], 
-# 	'Schoolfield',
-# 	sep = "_"
-# )
 # 
 # 
-# # Remove any characters that won't look good in a file name,
-# # using a regular expression.
-# output_name <- gsub("[^\\w|\\s](|)", "", output_name, perl=TRUE)
-# 
-# # Convert spaces to underscores.
-# output_name <- gsub("\\s+", "_", output_name, perl=TRUE)
-# 
-# # CHANGE THIS to set an alternative output directory.
-# outdir <- "./"
-
 # Generate predictions from the model fit...
 tmp_temps <- seq(3 + 273.15, 
                  38 + 273.15, length = 200)
@@ -276,4 +255,5 @@ dim(TT_Schoolfield_TPC_all)
 head(TT_Schoolfield_TPC_all)
 write_csv(TT_Schoolfield_TPC_all, "data-processed/TT_Schoolfield_TPC_all.csv")
 
+plot(TT_Schoolfield_TPC_all$umax~TT_Schoolfield_TPC_all$Temperature, type="l")
 
