@@ -153,8 +153,8 @@ with(allruns_dataset, plot(OriginalTraitValue~Temperature,
 
 for(i in 1:100){
   current_dataset<- allruns_dataset %>%
-    group_by(Temperature) %>%
-    sample_n(., 1)
+  group_by(Temperature) %>%
+  sample_n(., 1)
 
 schoolfield_nls <- NA
 schoolfield_nls <- nlsLM(

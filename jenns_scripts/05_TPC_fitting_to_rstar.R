@@ -6,12 +6,13 @@ library(tidyverse)
 
 ## load data
 
-cell_results<-read_csv("data-processed/logistic_growth_fits_r-star.csv")
+cell_results<-read_csv("data-processed/logistic_growth_fits_rep_r-star.csv")
 
 dat.full <- cell_results %>% 
   mutate(corrected_r=r+0.1) %>% 
-  filter(species !=3 | temp != 3) %>% 
-  filter(temp != 38) %>% 
+  filter(species !=1 | temp != 38) %>% 
+  filter(species !=2 | temp != 38) %>% 
+  filter(species !=3 | temp != 38) %>% 
 	rename(curve.id = species,
 				 growth.rate = corrected_r, 
 				 temperature = temp)
@@ -55,7 +56,7 @@ for(i in 1:length(curve.id.list)){
 	## This loop fits the model using a range of different starting guesses. We choose the best one using AIC. This helps find good solutions even if there are
 	# convergence problems.
 	# Starting estimates for parameters 'a' and 'b' use a plausible range but with broadly spaced estimates to speed up fitting. 
-	avals<-seq(-0.2,1.2,0.1)		
+	avals<-seq(-0.2,1.2,0.1) 		
 	bvals<-seq(-0.2,0.3,0.05)
 	mod.list<-list()
 	AIC.list<-c()
@@ -137,13 +138,30 @@ for(i in 1:length(curve.id.list)){
 }
 
 fits <-data.frame(curve.id.list, topt.list,maxgrowth.list,z.list,w.list,a.list,b.list,rsqr.list,s.list,n.list)
-write_csv(fits, "data-processed/TPC_fits.csv")
+write_csv(fits, "data-processed/TPC_fits_2017.csv")
 
 
 ### plot the curves
-fits <- read_csv("data-processed/TPC_fits.csv")
+fits <- read_csv("data-processed/TPC_fits_2017.csv")
 
-par(mfrow=c(2,2))
+dat.full %>%
+  ggplot(aes(x=temperature, y=growth.rate)) + facet_grid(~as.factor(curve.id)) +
+  geom_point() +
+  stat_function(fun=nbcurve, 
+                args=c(fits$z.list[1],fits$w.list[1],fits$a.list[1],fits$b.list[1]))
+
+mutate(newname=nbcurve())
+dat.full %>%
+  ggplot(aes(x=temperature, y=growth.rate)) + facet_grid(~as.factor(curve.id)) +
+  geom_point() +
+  stat_function(data=fits2, fun=nbcurve, aes(group=as.factor(curve.id)),
+                args=c(z.list,w.list,a.list,b.list))
+plot(nbcurve(1:30,fits$z.list[1],fits$w.list[1],fits$a.list[1],fits$b.list[1]), type="l")
+
+fits2<-fits %>%
+  rename(curve.id=curve.id.list) 
+
+par(mfrow=c(1,4))
 plot(dat.full$growth.rate[dat.full$curve.id == 1]~dat.full$temperature[dat.full$curve.id == 1],ylim=c(-0.5,2), main=curve.id.list[1],
 		 xlim=c(1,34),xlab='Temperature',ylab='Specific growth rate (per day)', cex.lab=1.5,cex.axis=1.5)
 curve(nbcurve(x,fits$z.list[1],fits$w.list[1],fits$a.list[1],fits$b.list[1]),col='red', lwd=2,add=TRUE)
@@ -154,12 +172,12 @@ curve(nbcurve(x,fits$z.list[2],fits$w.list[2],fits$a.list[2],fits$b.list[2]),col
 
 plot(dat.full$growth.rate[dat.full$curve.id == 3]~dat.full$temperature[dat.full$curve.id == 3],ylim=c(-1.5,2), main=curve.id.list[3],
 		 xlim=c(min(dat$temperature)-2,max(dat$temperature)+2),xlab='Temperature',ylab='Specific growth rate (per day)', cex.lab=1.5,cex.axis=1.5)
-curve(nbcurve(x,fits$z.list[4],fits$w.list[4],fits$a.list[4],fits$b.list[4]),col='red', lwd=2,add=TRUE)
-
+curve(nbcurve(x,fits$z.list[3],fits$w.list[3],fits$a.list[3],fits$b.list[3]),col='red', lwd=2,add=TRUE)
 
 plot(dat.full$growth.rate[dat.full$curve.id == 4]~dat.full$temperature[dat.full$curve.id == 4],ylim=c(-0.5,2), main=curve.id.list[4],
 		 xlim=c(min(dat$temperature)-2,max(dat$temperature)+2),xlab='Temperature',ylab='Specific growth rate (per day)', cex.lab=1.5,cex.axis=1.5)
-curve(nbcurve(x,fits$z.list[3],fits$w.list[3],fits$a.list[3],fits$b.list[3]),col='red', lwd=2,add=TRUE)
+curve(nbcurve(x,fits$z.list[4],fits$w.list[4],fits$a.list[4],fits$b.list[4]),col='red', lwd=2,add=TRUE)
+
 
 par(mfrow=c(1,1))
 par(mar=c(4,5,0.1, 0.1))
@@ -173,12 +191,12 @@ curve(nbcurve(x,fits$z.list[2],fits$w.list[2],fits$a.list[2],fits$b.list[2]), co
 
 points(dat.full$growth.rate[dat.full$curve.id == 3]~dat.full$temperature[dat.full$curve.id == 3],ylim=c(-1.5,2), 
      xlim=c(min(dat$temperature)-2,max(dat$temperature)+2),xlab='Temperature', col=3, ylab='Specific growth rate (per day)', cex.lab=1.5,cex.axis=1.5)
-curve(nbcurve(x,fits$z.list[4],fits$w.list[4],fits$a.list[4],fits$b.list[4]), col=3, lwd=2,add=TRUE)
-###hmmm... why does the fitted curve from species 4 fit the data from species 3 and vice-versa?
-##Joey any thoughts?
+curve(nbcurve(x,fits$z.list[3],fits$w.list[3],fits$a.list[3],fits$b.list[3]),col=4, lwd=2,add=TRUE)
+
 points(dat.full$growth.rate[dat.full$curve.id == 4]~dat.full$temperature[dat.full$curve.id == 4],ylim=c(-0.5,2),
      xlim=c(min(dat$temperature)-2,max(dat$temperature)+2),xlab='Temperature',col=4, ylab='Specific growth rate (per day)', cex.lab=1.5,cex.axis=1.5)
-curve(nbcurve(x,fits$z.list[3],fits$w.list[3],fits$a.list[3],fits$b.list[3]),col=4, lwd=2,add=TRUE)
+curve(nbcurve(x,fits$z.list[4],fits$w.list[4],fits$a.list[4],fits$b.list[4]), col=3, lwd=2,add=TRUE)
+
 abline(0,0)
 
 

@@ -549,7 +549,11 @@ results38<-rbind(results381, results382, results383, results384) %>%
   mutate(rep=rep(1:5, 4))
 
 nitrate_decay_results<-rbind(results03, results10, results17, results24, results31, results38)
-write.csv(nitrate_decay_results, file="data-processed/nitrate_decay_rep_r-star.csv")
+
+#add species names
+nitrate_decay_results_with_species<-nitrate_decay_results %>%
+  mutate(Species=ifelse(species==1, "TT", ifelse(species==2, "CS", ifelse(species==3, "AC", ifelse(species==4, "CH", NA)))))
+write.csv(nitrate_decay_results_with_species, file="data-processed/nitrate_decay_rep_r-star.csv")
 
 #
 #
@@ -557,9 +561,12 @@ write.csv(nitrate_decay_results, file="data-processed/nitrate_decay_rep_r-star.c
 nitrate_decay_results=read.csv(file="data-processed/nitrate_decay_rep_r-star.csv")
 
 nitrate_decay_results %>%
-  ggplot(aes(x = temp, y = K, color=as.factor(species))) + geom_point(size = 2) +
-  theme_bw() + facet_grid(~species) + geom_smooth(method = 'loess')
-ggsave("rstar_with_temp_2017.pdf", width=7, height=2.5)
+  filter(!temp==38 | !Species=="TT")%>%
+  filter(!temp==38 | !Species=="CS")%>%
+  filter(!temp==38 | !Species=="AC")%>%
+  ggplot(aes(x = temp, y = K, color=as.factor(Species))) + geom_point(size = 2) +
+  theme_bw() + facet_grid(~Species) + geom_smooth(method = 'loess')
+ggsave("rstar_with_temp_2017.pdf", width=7, height=2)
 
 
 par(mfrow=c(1,1))

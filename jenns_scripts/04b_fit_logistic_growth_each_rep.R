@@ -452,13 +452,17 @@ results38<-rbind(results381, results382, results383, results384) %>%
 #
 
 cell_results<-rbind(results3, results10, results17, results24, results31, results38)
-write.csv(cell_results, file="data-processed/logistic_growth_fits_rep_r-star.csv")
+#add species names
+cell_results_with_species<-cell_results %>%
+  mutate(Species=ifelse(species==1, "TT", ifelse(species==2, "CS", ifelse(species==3, "AC", ifelse(species==4, "CH", NA)))))
+
+write.csv(cell_results_with_species, file="data-processed/logistic_growth_fits_rep_r-star.csv")
 
 cell_results<-read.csv("data-processed/logistic_growth_fits_rep_r-star.csv")
 
 cell_results %>%
   mutate(r_corr=r+0.1) %>% #correct for an added death rate of 0.1 per day
-  ggplot(aes(x = temp, y = r_corr, color=as.factor(species))) + geom_point(size = 2) +
-  theme_bw() + facet_grid(~species) +
+  ggplot(aes(x = temp, y = r_corr, color=as.factor(Species))) + geom_point(size = 2) +
+  theme_bw() + facet_grid(~Species) +
   geom_hline(yintercept = 0) + geom_smooth(method = 'loess')
-ggsave("growth_rate_with_temp_2017.pdf", width=7, height=2.5)
+ggsave("growth_rate_with_temp_2017.pdf", width=7, height=2)
