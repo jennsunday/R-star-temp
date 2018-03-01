@@ -1,3 +1,8 @@
+library(ggplot2)
+library(broom)
+library(tidyverse)
+
+
 #Read in standard curves
 
 stcurve.2606<-read.csv("nitrate_data/standard_curves/standard_curve_260617.csv")
@@ -5,70 +10,90 @@ stcurve.2706<-read.csv("nitrate_data/standard_curves/standard_curve_270617.csv")
 stcurve.2806<-read.csv("nitrate_data/standard_curves/standard_curve_280617.csv")
 stcurve.1107<-read.csv("nitrate_data/standard_curves/standard_curve_110717.csv")
 stcurve.1207<-read.csv("nitrate_data/standard_curves/standard_curve_120717.csv")
-stcurve.1407<-read.csv("nitrate_data/standard_curves/standard_curve_140717.csv")
+stcurve.1407<-read.csv("nitrate_data/standard_curves/standard_curve_140717.csv") #this one has a different strucutre
 
-names(stcurve.2806)
 #remove abherrant point because there was a bubble on the cuvette
 stcurve.2806$absorbance.1 [stcurve.2806$sample=="st.3." & stcurve.2806$rep=="B"]<- 0.044
 
 
-#take mean from 2 observations
-stcurve.2606$meanabs<-(stcurve.2606$absorbance.1+stcurve.2606$absorbance.1)/2
-stcurve.2706$meanabs<-(stcurve.2706$absorbance.1+stcurve.2706$absorbance.1)/2
-stcurve.2806$meanabs<-(stcurve.2806$absorbance.1+stcurve.2806$absorbance.1)/2
-stcurve.1107$meanabs<-(stcurve.1107$absorbance.1+stcurve.1107$absorbance.1)/2
-stcurve.1207$meanabs<-(stcurve.1207$absorbance.1+stcurve.1207$absorbance.1)/2
-stcurve.1407$meanabs<-(stcurve.1407$absorbance.1+stcurve.1407$absorbance.1)/2
+
+head(stcurve.2606)
+
+new_1<-stcurve.2606 %>%
+  select(sample, absorbance.1, absorbance.2, nitrate, rep) %>%
+  mutate(date.measured="17.06.26", day=1)
+new_2<-stcurve.2706 %>%
+  select(sample, absorbance.1, absorbance.2, nitrate, rep) %>%
+  mutate(date.measured="17.06.27", day=2)
+new_3<-stcurve.2806 %>%
+  select(sample, absorbance.1, absorbance.2, nitrate, rep) %>%
+  mutate(date.measured="17.06.28", day=3) %>%
+  filter(rep!="B") #remembering that I immediately redid rep B on 17/06/28 as rep B2, therefore ok to remove rep B
+new_4<-stcurve.1107 %>%
+  select(sample, absorbance.1, absorbance.2, nitrate, rep) %>%
+  mutate(date.measured="17.07.11", day=4)
+new_5<-stcurve.1207 %>%
+  select(sample, absorbance.1, absorbance.2, nitrate, rep) %>%
+  mutate(date.measured="17.07.12", day=5)
+new_6<-stcurve.1407 %>%
+  select(sample, absorbance.1, absorbance.2, nitrate, rep) %>%
+  mutate(date.measured="17.07.14", day=6)
 
 
-#plot standard curves from different dates on top of each other
-with(stcurve.2606, plot(meanabs~nitrate, col=rep))
-abline(lm(meanabs~nitrate, data=stcurve.2606))
+all_standard_curves<-rbind(new_1, new_2, new_3, new_4, new_5, new_6)
 
-with(stcurve.2706, points(meanabs~nitrate, col=rep, pch=2))
-abline(lm(absorbance.1~nitrate, data=stcurve.2706))
+#get 2 absorbance measures from each samples into a single column labelled as "take" 1 and 2
+all_standard_curves_vert<-rbind(all_standard_curves, all_standard_curves) %>%
+  mutate(absorbance=c(all_standard_curves$absorbance.1, all_standard_curves$absorbance.2), 
+         take=rep(1:2, length(all_standard_curves$absorbance.2))) %>%
+  select(-absorbance.1, -absorbance.2) %>%
+  filter(!sample %in% c("blank", "Blank"))  %>%
+  filter(!rep %in% c("B2_500_a", "B2_500_b", "B2_cuvette")) 
 
-#remove erroneous reads - clearly out of line, especially after cadmium bottle was replaced
-stcurve.2806.corr<-subset(stcurve.2806, rep=="C" | 
-                            rep=="A" & !nitrate %in% c(4,5,6) | 
-                            rep=="B" & !nitrate %in% c(4,7))
-with(stcurve.2806.corr, points(meanabs~nitrate, col=rep, pch=3, ylim=c(0, 0.11)))
+       
+names(all_standard_curves_vert)
+as.factor(all_standard_curves_vert$day)
 
-with(subset(stcurve.2806, stcurve.2806$rep %in% c("B2_500_a", "B2_500_b", "B2_cuvette")), 
-            points(meanabs~nitrate, col=rep, pch=3))
+#adventures in plotting
+all_standard_curves_vert %>%
+  filter(absorbance<0.12)%>%
+  ggplot(aes(y=nitrate, x=absorbance)) +
+  geom_point() + stat_smooth(method="lm") + facet_wrap(~date.measured) + theme_bw()
+ggsave("standard_curves.pdf")
 
-with(stcurve.1107, points(meanabs~nitrate, col=rep, pch=1))
-with(stcurve.1207, points(meanabs~nitrate, col=rep, pch=2))
-with(stcurve.1407, points(meanabs~nitrate, col=1, pch=2))
+all_standard_curves_vert %>%
+  filter(absorbance<0.12)%>%
+  ggplot(aes(y=nitrate, x=absorbance)) +
+  geom_point() + stat_smooth(method="lm")
 
-legend("topleft", levels(stcurve.1107$rep), levels(as.factor((stcurve.1107$rep))), pch=1, col=1:4)
 
+#Fit model
+all_st_curves_model<-all_standard_curves_vert %>%
+  filter(absorbance<0.12)%>%
+  group_by(date.measured, rep)%>%
+  do(tidy(lm(nitrate~absorbance, data=.)))
 
-#define standard curve equations for each date
-st.2606<-lm(meanabs~nitrate, data=stcurve.2606)
-st.2706<-lm(meanabs~nitrate, data=stcurve.2706)
+predict(all_st_curves_model, newdata=0.5)
 
-st.2806<-lm(meanabs~nitrate, data=stcurve.2806.corr)
-st.1107<-lm(meanabs~nitrate, data=stcurve.1107)
-st.1207<-lm(meanabs~nitrate, data=stcurve.1207)
-st.1407<-lm(meanabs~nitrate, data=stcurve.1407)
+#fit a different model for different dates
+for (i in 1:length(unique(all_standard_curves_vert$date.measured))){
+temp<-all_standard_curves_vert %>%
+  filter(absorbance<0.12)%>%
+  filter(date.measured==unique(all_standard_curves_vert$date.measured)[i])
+mod<-lm(nitrate~absorbance, data=temp)
+assign(paste("mod", unique(all_standard_curves_vert$date.measured)[i], sep="_"), mod)
+}
 
-#look at the lines
-abline(st.2806, col=3)
-abline(st.1107, col=1)
-abline(st.1207, col=4)
-abline(st.1407, col=4)
+#these are the models:
+mod_17.06.26
+mod_17.06.27
+mod_17.06.28
+mod_17.07.11
+mod_17.07.12
+mod_17.07.14
 
-#plot slopes of this curve as a function of date
-slopes<-c(coef(st.2606)[1], coef(st.2706)[1], coef(st.2806)[1], coef(st.1107)[1], coef(st.1207)[1], coef(st.1407)[1])
-dates<-c(26-26, 27-26, 28-26, 41-26, 42-26, 44-26)
-plot(slopes~dates)
-
-#plot intercepts of this curve as a function of date
-ints<-c(coef(st.2606)[2], coef(st.2706)[2], coef(st.2806)[2], coef(st.1107)[2], coef(st.1207)[2], coef(st.1407)[2])
-dates<-c(26-26, 27-26, 28-26, 41-26, 42-26, 44-26)
-plot(ints~dates)
-
-#July 5,6,7 are the measurement dates that don't have a standard curve
-#these would be 9,10,11
+all_st_curves_model  %>% 
+  filter(term=="absorbance") %>%
+  ggplot(aes(y=estimate, x=date.measured, col=rep)) + geom_point() +
+  geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=.2)
 
