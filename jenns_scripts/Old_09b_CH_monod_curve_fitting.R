@@ -22,7 +22,7 @@ CHN<- CH %>%
   mutate(N.Treatment = str_replace(N.Treatment, "1105", "55")) %>% 
   mutate(N.Treatment = as.numeric(N.Treatment))
 
-#filter out data where K seems to have been reached beyond the variability expected by noise (quite arbitrary)
+#
 CHfiltered<- CH %>% 
   mutate(day = Hours.since.Innoc/24) %>% 
   mutate(log.Particles.per.ml = log(Particles.per.ml+1)) %>% 	
@@ -98,10 +98,10 @@ CHfilteredN<- CHfiltered %>%
 
 write_csv(CHfilteredN,"data-processed/CHfilteredN.csv")
 
-#fit just lm
+#Vis linear model over raw data
 CHfilteredN %>%
   ggplot(aes(y=log.Particles.per.ml, x=day))  +
-  facet_grid(N.Treatment~Temperature) +
+  facet_grid(Temperature~N.Treatment) +
   stat_smooth(method=lm) +
   geom_point(data=CHN, color="red", alpha=0.5) + geom_point()
 
@@ -164,14 +164,14 @@ ggsave("figures/CH_monod_curves.png")
 
 CH_r <- CHfilteredN %>% 
   group_by(Temperature, N.Treatment) %>% 
-  do(tidy(nls(Particles.per.ml ~ 75 * (1+a)^(day),
+  do(tidy(nls(Particles.per.ml ~ 1000 * (1+a)^(day),
               data= .,  start=list(a=0.01),
               control = nls.control(maxiter=100, minFactor=1/204800000)))) 
 write_csv(CH_r, "data-processed/fitted_r_CH_from_2015.csv")
 
 CHfilteredN %>% 
   group_by(Temperature, N.Treatment) %>% 
-  do(tidy(nls(Particles.per.ml ~ 75 * (1+a)^(day),
+  do(tidy(nls(Particles.per.ml ~ 1000 * (1+a)^(day),
               data= .,  start=list(a=0.01),
               control = nls.control(maxiter=100, minFactor=1/204800000)))) %>% 
   ggplot(aes(x = Temperature, y = estimate, color = factor(Temperature))) + geom_point(size = 4) +
@@ -186,7 +186,7 @@ for (j in c(13, 16, 19, 22, 25, 28)){
     boot_r<-1:100
     for(i in 1:100){
       mod<-sample_n(test, length(test$day)-1) %>% #take a sample of 1 - total # of days
-        do(tidy(nls(Particles.per.ml ~ 75 * (1+a)^(day),
+        do(tidy(nls(Particles.per.ml ~ 1000 * (1+a)^(day),
                     data= .,  start=list(a=0.01),
                     control = nls.control(maxiter=100, minFactor=1/204800000))))
       boot_r[i]<-mod$estimate

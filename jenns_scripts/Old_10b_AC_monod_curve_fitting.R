@@ -98,10 +98,10 @@ ACfilteredN<- ACfiltered %>%
 
 write_csv(ACfilteredN,"data-processed/ACfilteredN.csv")
 
-#fit just lm
+#Vis linear model over raw data
 ACfilteredN %>%
   ggplot(aes(y=log.Particles.per.ml, x=day))  +
-  facet_grid(N.Treatment~Temperature) +
+  facet_grid(Temperature~N.Treatment) +
   stat_smooth(method=lm) +
   geom_point(data=ACN, color="red", alpha=0.5) + geom_point()
 

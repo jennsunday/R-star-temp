@@ -99,13 +99,15 @@ TTfilteredN<- TTfiltered %>%
 
 write_csv(TTfilteredN,"data-processed/TTfilteredN.csv")
 
-#fit a linear model
-#fit just lm
+#Vis linear model over raw data
 TTfilteredN %>%
   ggplot(aes(y=log.Particles.per.ml, x=day))  +
-  facet_grid(N.Treatment~Temperature) +
+  facet_grid(Temperature~N.Treatment) +
   stat_smooth(method=lm) +
   geom_point(data=TTN, color="red", alpha=0.5) + geom_point()
+
+
+
 
 lmfits<-TTfilteredN %>%
   group_by(N.Treatment, Temperature) %>%

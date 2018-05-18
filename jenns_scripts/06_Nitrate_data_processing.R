@@ -39,7 +39,6 @@ day0<-subset(data, day==0)
 aboveday0<-subset(data, day>0)
 caboveday0<-subset(aboveday0, !aboveday0$error_code %in% c("contaminated", "vis_outlier", "remove_low_vol", "discard"))
 cdata<-rbind(day0, caboveday0)
-View(day0)
 
 #how many vis outliers?
 dim(subset(aboveday0, aboveday0$error_code %in% 
@@ -172,24 +171,6 @@ with (cdata, plot(predicted_N~date))
 #
 #
 
-#plot by temp
-par(mfrow=c(2,3))
-for (i in c(3, 10, 17, 24, 31, 38)){
-  tempdata<-subset(cdata, cdata$temp==i)
-  with(tempdata, plot(predicted_N~date, ylim=c(0, 12), col=i))
-}
-
-#plot by temp and species along date
-par(mfcol=c(6,4))
-par(mar=c(3,3,0,0), oma=c(1,1,0.5, 0.5))
-for(j in 1:4){
-  for (i in c(3, 10, 17, 24, 31, 38)){
-    tempdata<-subset(cdata, cdata$temp==i & cdata$species==j)
-    with(tempdata, plot(predicted_N~date, ylim=c(0, 12), col=i))
-   
-  }
-}
-
 #according to notes, remove highest temp of species 1 before May 15
 sp1<-subset(cdata, cdata$species==1)
 sp2<-subset(cdata, cdata$species==2)
@@ -198,7 +179,7 @@ sp4<-subset(cdata, cdata$species==4)
 sp1c<-subset(sp1, sp1$temp<35 | sp1$date<"2017-05-15")
 cdata<-rbind(sp1c, sp2, sp3, sp4)
 
-#make all the initial concentrations the same
+#set the initial concentrations
 day0<-subset(cdata, cdata$day=="0")
 day0$n.fixed<-mean(subset(day0$predicted_N, complete.cases(day0$predicted_N)))
 daynot0<-subset(cdata, cdata$day!="0")

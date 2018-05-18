@@ -102,6 +102,7 @@ CHfilteredN<- CHfiltered %>%
   mutate(N.Treatment = str_replace(N.Treatment, "1105", "55")) %>% 
   mutate(N.Treatment = as.numeric(N.Treatment))
 
+write_csv(CHfilteredN,"data-processed/CHfilteredN.csv")
 # working in non-logged data, fitting exponential curve
 
 CHfilteredN %>% 

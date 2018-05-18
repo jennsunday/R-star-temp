@@ -105,6 +105,14 @@ CSfilteredN <- CSfiltered %>%
 
 write_csv(CSfilteredN,"data-processed/CSfilteredN.csv")
 
+
+#Vis linear model over raw data
+CSfilteredN %>%
+  ggplot(aes(y=log.Particles.per.ml, x=day))  +
+  facet_grid(Temperature~N.Treatment) +
+  stat_smooth(method=lm) +
+  geom_point(data=CSN, color="red", alpha=0.5) + geom_point()
+
 #fit just lm
 CSfilteredN %>%
   ggplot(aes(y=log.Particles.per.ml, x=day))  +

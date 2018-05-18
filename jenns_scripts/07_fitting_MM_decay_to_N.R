@@ -57,13 +57,27 @@ rstar_by_temp<-cdata %>%
                    data= .,  start=list(a=2, b=1),
                    control = nls.control(maxiter=100, minFactor=1/204800000))))
 
+write_csv(rstar_by_temp, "data-processed/rstar_by_temp.csv")
 
+rstar_by_temp<-read_csv("data-processed/rstar_by_temp.csv") %>% 
+  filter(term=="a")%>%
+  mutate(draw_down=4.4-estimate)
 
 rstar_by_temp %>% 
-  filter(term=="a") %>% 
   filter(!temp==38 | !Species=="TT")%>%
   filter(!temp==38 | !Species=="CS")%>%
   filter(!temp==38 | !Species=="AC")%>%
-  ggplot(aes(x = temp, y = estimate, color=as.factor(Species))) + geom_point(size = 2) +
-  theme_bw() + facet_grid(~Species) + geom_smooth(method = 'loess')
-ggsave("rstar_with_temp_2017.pdf", width=7, height=2)
+  ggplot(aes(x = temp, y = draw_down, color=as.factor(Species))) + geom_point(size = 2) +
+  theme_bw() + facet_grid(~Species) + geom_smooth(method = 'loess') + ylab("Nitrate draw down at equilibrium, uM")
+ggsave("figures/rstar_with_temp_2017.pdf", width=7, height=2)
+
+
+rstar_by_temp %>% 
+  filter(!temp==38 | !Species=="TT")%>%
+  filter(!Species=="CS")%>%
+  filter(!Species=="CH")%>%
+  filter(!temp==38 | !Species=="AC")%>%
+  ggplot(aes(x = temp, y = draw_down, color=as.factor(Species))) + 
+  theme_bw() + geom_smooth(method = 'loess', alpha=0.2) + ylab("Nitrate draw down at equilibrium, uM")
+ggsave("figures/rstar_with_temp_2017_overlapping.pdf", width=4, height=2)
+
