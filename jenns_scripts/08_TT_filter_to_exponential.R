@@ -25,9 +25,9 @@ TTN<- TT %>%
 
 #filter out data where K seems to have been reached beyond the variability expected by noise (quite arbitrary)
 TTfiltered<- TT %>% 
-  mutate(day = Hours.since.Innoc/24) %>% 
-  filter(N.Treatment!=5 | Temperature!=28 | MINUTE!=22) %>% 
-  mutate(log.Particles.per.ml = log(Particles.per.ml+1)) %>% 	
+  mutate(day = Hours.since.Innoc/24) %>% #convert hours to day
+  filter(N.Treatment!=5 | Temperature!=28 | MINUTE!=22) %>%  #remove (why?)
+  mutate(log.Particles.per.ml = log(Particles.per.ml+1)) %>% 	#create a column with log(cell density)
   filter( Temperature == 13 & N.Treatment == 8 |
             Temperature == 13 & N.Treatment == 7 |
             Temperature == 13 & N.Treatment == 6 | 
@@ -36,7 +36,7 @@ TTfiltered<- TT %>%
             Temperature == 13 & N.Treatment == 3 |
             Temperature == 13 & N.Treatment == 2 |
             Temperature == 13 & N.Treatment == 1 & day<6 |
-            Temperature == 13 & N.Treatment == 0 & day<6 |
+            Temperature == 13 & N.Treatment == 0  |
             Temperature == 16 & N.Treatment == 8 |
             Temperature == 16 & N.Treatment == 7 |
             Temperature == 16 & N.Treatment == 6 | 
@@ -45,7 +45,7 @@ TTfiltered<- TT %>%
             Temperature == 16 & N.Treatment == 3 |
             Temperature == 16 & N.Treatment == 2 |
             Temperature == 16 & N.Treatment == 1 & day<6 |
-            Temperature == 16 & N.Treatment == 0 & day<6|
+            Temperature == 16 & N.Treatment == 0 |
             Temperature == 19 & N.Treatment == 8  |
             Temperature == 19 & N.Treatment == 7  |
             Temperature == 19 & N.Treatment == 6 | 
@@ -72,7 +72,7 @@ TTfiltered<- TT %>%
             Temperature == 25 & N.Treatment == 3 & day<3.5 |
             Temperature == 25 & N.Treatment == 2 |
             Temperature == 25 & N.Treatment == 1 & day<3.5|
-            Temperature == 25 & N.Treatment == 0 & day<3.5| 		
+            Temperature == 25 & N.Treatment == 0 | 		
             Temperature == 28 & N.Treatment == 8 |
             Temperature == 28 & N.Treatment == 7 |
             Temperature == 28 & N.Treatment == 6 | 
@@ -81,7 +81,7 @@ TTfiltered<- TT %>%
             Temperature == 28 & N.Treatment == 3 & day<3 |
             Temperature == 28 & N.Treatment == 2 |
             Temperature == 28 & N.Treatment == 1 & day<4|
-            Temperature == 28 & N.Treatment == 0 & day<3.8) 
+            Temperature == 28 & N.Treatment == 0 ) 
 
 
 #take filtered data, add actual N concentrations, plot monod curves
@@ -99,10 +99,12 @@ TTfilteredN<- TTfiltered %>%
 
 write_csv(TTfilteredN,"data-processed/TTfilteredN.csv")
 
+
 #Vis linear model over raw data
 TTfilteredN %>%
   ggplot(aes(y=log.Particles.per.ml, x=day))  +
   facet_grid(Temperature~N.Treatment) +
   stat_smooth(method=lm) +
-  geom_point(data=TTN, color="red", alpha=0.5) + geom_point()
+  geom_point(data=TTN, aes(y=log.Particles.per.ml), color="red", alpha=0.5) +
+  geom_point()
 
