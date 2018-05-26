@@ -38,14 +38,14 @@ for(k in 1:4){
   data<-filter(alldata, Species==unique(alldata$Species)[k])
   fit<-nls_multstart(log.Particles.per.ml 
                      ~ N_init + (((b1 * exp(b2*Temperature))
-                                  -(d0 + d1*exp(d2*Temperature)))) * (N.Treatment / (ks + N.Treatment)) * day,
+                                  -(d0 + d1*exp(d2*Temperature)))) * (N.Treatment + zn / (ks + N.Treatment + zn)) * day,
                      data= data,  iter = 2000,
-                     start_lower = c(N_init=5, b1 = 0, b2=0, d0=0, d1=0, d2=0, ks = 0),
-                     start_upper = c(N_init=7, b1 = 5, b2=2, d0=5, d1=2, d2=2, ks = 15),
+                     start_lower = c(N_init=5, b1 = 0, b2=0, d0=0, d1=0, d2=0, ks = 0, zn=0),
+                     start_upper = c(N_init=7, b1 = 5, b2=2, d0=5, d1=2, d2=2, ks = 15, zn=0.5),
                      supp_errors = 'Y',
                      convergence_count = 100,
                      na.action = na.omit,
-                     lower=c(N_init = 0, b1 = 0, b2 = -50, d0 = 0, d1 = 0, d2 = -50, ks = 0),
+                     lower=c(N_init = 0, b1 = 0, b2 = -50, d0 = 0, d1 = 0, d2 = -50, ks = 0, zn=-50),
                      control = nls.control(maxiter=1000, minFactor=1/204800000))
   
   params_fit<-tidy(fit) %>% mutate(Species=unique(alldata$Species)[k])
@@ -143,7 +143,7 @@ for(k in 1:4){
   
   params_fit<-tidy(fit) %>% mutate(Species=unique(alldata$Species)[k])
   all_params_fit<-rbind(all_params_fit, params_fit)
-View(all_params_fit)
+
   summary_fit<-glance(fit) %>% mutate(Species=unique(alldata$Species)[k])
   all_summary_fit<-rbind(all_summary_fit, summary_fit)
   
@@ -178,6 +178,7 @@ View(all_params_fit)
 #save outputs
 write_csv(all_roots_ks_umax, "data-processed/all_roots_ks_umax_IDE_kb_fixed.csv")
 write_csv(all_summary_fit, "data-processed/all_summary_fit_IDE_kb_fixed.csv")
+write_csv(all_params_fit, "data-processed/all_params_fit_IDE_kb_fixed.csv")
 
 #read in outputs
 all_roots_ks_umax<-read_csv("data-processed/all_roots_ks_umax_IDE_kb_fixed.csv")

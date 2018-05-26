@@ -9,7 +9,7 @@ library(tidyverse)
 library(nls.multstart)
 library(gridExtra)
 
-#compare model fits
+
 all_fits<-rbind(read_csv("data-processed/all_summary_fit_IDE_kb_fixed.csv") %>% mutate(model="IDE_kb_fixed"),
                 read_csv("data-processed/all_summary_fit_IDE_kg_fixed.csv") %>% mutate(model="IDE_kg_fixed"),
                 read_csv("data-processed/all_summary_fit_IDE_kb_var.csv") %>% mutate(model="IDE_kb_var"),
@@ -67,3 +67,47 @@ p2<-ggplot() + geom_line(data=best_model_params, aes(x=Temperature, y=umax, colo
 
 together<-grid.arrange(p1, p2, nrow = 2)
 ggsave("figures/best_roots_and_umax.pdf", together, width=8, height=4)
+
+
+
+#display fits to indirect parameter estimates for best-fit models #####
+predict_growth_NB<-rbind(read_csv("data-processed/predict_growth_NB_fixed.csv") %>% 
+                           select(N, Temp, Species, r_pred) %>%
+                           mutate(ks_type="fixed"),
+                         read_csv("data-processed/predict_growth_NB_var.csv") %>% 
+                           select(N, Temp, Species, r_pred) %>%
+                           mutate(ks_type="var"))
+indirect_r_fit<-rbind(read_csv("data-processed/indirect_r.csv") %>% 
+                        mutate(ks_type="fixed"),
+                         read_csv("data-processed/indirect_r_NB_var_compare.csv") %>% 
+                        mutate(ks_type="var"))
+
+growth_predicted_with_best_models<-predict_growth_NB %>%
+  filter(ks_type=="var" & Species=="AC" |
+           ks_type=="fixed" & Species=="CH"|
+           ks_type=="fixed" & Species=="CS"|
+           ks_type=="var" & Species=="TT")
+
+indirect_r_fit_best<-indirect_r_fit %>%
+  filter(ks_type=="var" & Species=="AC" |
+           ks_type=="fixed" & Species=="CH"|
+           ks_type=="fixed" & Species=="CS"|
+           ks_type=="var" & Species=="TT")
+
+
+P1<-indirect_r_fit_best %>%
+  ggplot(aes(y=estimate, x=as.numeric(N.Treatment), col=as.factor(Temperature))) +
+  facet_grid(term~Species, scales="free_y") + geom_point() +
+  geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error, width=0))+
+  geom_line(data=growth_predicted_with_best_models, aes(y=r_pred, x=N, colour=as.factor(Temp))) +
+  theme_bw()
+
+P2<-indirect_r_fit_best %>%
+  ggplot(aes(y=estimate, x=Temperature, col=as.factor(N.Treatment))) +
+  facet_grid(term~Species, scales="free_y") + geom_point() +
+  geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error, width=0))+
+  geom_line(data=growth_predicted_with_best_models, aes(y=r_pred, x=Temp, colour=as.factor(N))) +
+  theme_bw()
+
+together<-grid.arrange(P1, P2, nrow = 2)
+ggsave("figures/best_growth_fits.pdf", together, width=8, height=4)
