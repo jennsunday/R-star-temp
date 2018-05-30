@@ -71,8 +71,9 @@ for(i in 1:4){
 
 write_csv(all_params_fit, "data-processed/indirect_r.csv")
 
+indirect_r<-read_csv("data-processed/indirect_r.csv")
 
-all_params_fit %>%
+indirect_r %>%
   ggplot(aes(y=estimate, x=as.numeric(N.Treatment), col=as.factor(Temperature))) +
   facet_grid(term~Species, scales="free_y") + geom_point() +
   geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error, width=0))
@@ -83,12 +84,13 @@ all_params_fit %>%
 #get model-fitted u across temp and nitrate ####
 #assign parameters
 
-predict_grid<-expand.grid(N=unique(alldata$N.Treatment), Temp=unique(alldata$Temperature), Species=unique(alldata$Species))
+predict_grid<-expand.grid(N=unique(alldata$N.Treatment), Temp=newdata$Temperature, Species=unique(alldata$Species))
+
 
 #add Norberg model-fitted parameters to predict_grid
 NB_fit<-read_csv("data-processed/all_params_fit_NB_fixed.csv")
 #NB_fit<-all_params_fit
-View(NB_fit)
+#View(NB_fit)
 backtogether<-data.frame()
 for(i in 1:4){
 predict_grid_sp<-predict_grid %>%
@@ -124,16 +126,20 @@ predict_growth <- predict_grid_full %>%
   
 write_csv(predict_growth, "data-processed/predict_growth_NB_fixed.csv")
 
-ggplot() +
-  geom_line(data=predict_growth, aes(y=r_pred, x=N, colour=as.factor(Temp))) +
+indirect_r_fit<-read_csv("data-processed/indirect_r.csv")
+
+predict_growth %>%
+  filter(Temp %in% unique(alldata$Temperature)) %>%
+  ggplot() +
+  geom_line(aes(y=r_pred, x=N, colour=as.factor(Temp))) +
   facet_grid(~Species)
 
-indirect_r_fit<-read_csv("data-processed/indirect_r.csv")
+
 P1<-indirect_r_fit %>%
   ggplot(aes(y=estimate, x=as.numeric(N.Treatment), col=as.factor(Temperature))) +
   facet_grid(term~Species, scales="free_y") + geom_point() +
   geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error, width=0))+
-  geom_line(data=predict_growth, aes(y=r_pred, x=N, colour=as.factor(Temp))) +
+  geom_line(data=filter(predict_growth, Temp %in% unique(alldata$Temperature)), aes(y=r_pred, x=N, colour=as.factor(Temp))) +
   #geom_line(data=all_preds_fit, aes(y=.fitted, x=N.Treatment, colour=as.factor(Temperature))) +
   ylab("growth rate, d-1") +
   xlab("Nitrate concentration, uM") +
@@ -149,6 +155,7 @@ P2<-indirect_r_fit %>%
   geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error, width=0))+
   geom_line(data=predict_growth, aes(y=r_pred, x=Temp, colour=as.factor(N))) +
   ylab("growth rate, d-1") +
+  coord_cartesian(ylim = c(0, 1.7), xlim=c(-1,50))  +
   labs(col="Nitrate conc. uM") +
   theme_bw()
 #ggsave("figures/TPC_fits.pdf", width=8, height=2)
@@ -206,7 +213,7 @@ for(i in 1:4){
 write_csv(all_params_fit, "data-processed/indirect_r_NB_var_compare.csv")
 
 
-predict_grid<-expand.grid(N=unique(alldata$N.Treatment), Temp=unique(alldata$Temperature), Species=unique(alldata$Species))
+predict_grid<-expand.grid(N=unique(alldata$N.Treatment), Temp=newdata$Temperature, Species=unique(alldata$Species))
 
 #add Norberg var ks model-fitted parameters to predict_grid
 NB_fit<-read_csv("data-processed/all_params_fit_NB_var.csv")
@@ -255,7 +262,7 @@ indirect_r_fit %>%
   ggplot(aes(y=estimate, x=as.numeric(N.Treatment), col=as.factor(Temperature))) +
   facet_grid(term~Species, scales="free_y") + geom_point() + 
   geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error, width=0))+
-  geom_line(data=predict_growth, aes(y=r_pred, x=N, colour=as.factor(Temp))) +
+  geom_line(data=filter(predict_growth, Temp %in% unique(alldata$Temperature)), aes(y=r_pred, x=N, colour=as.factor(Temp))) +
   coord_cartesian(xlim=c(-30, 400)) +
   ylab("growth rate, d-1") +
   xlab("Nitrate concentration, uM") +
@@ -270,6 +277,7 @@ indirect_r_fit %>%
   geom_line(data=predict_growth, aes(y=r_pred, x=Temp, colour=as.factor(N))) +
   ylab("growth rate, d-1") +
   labs(col="Nitrate conc. uM") +
+  coord_cartesian(ylim = c(0, 1.7), xlim=c(-1,50))  +
   theme_bw()
 ggsave("figures/TPC_fits.pdf", width=8, height=2)
 
