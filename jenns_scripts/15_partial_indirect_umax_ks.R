@@ -27,6 +27,7 @@ newdata<-data.frame(Temperature=seq(-3, 50, 0.5))
 
 N_init_fit_NB_fixed<-read_csv("data-processed/all_params_fit_NB_fixed.csv") %>%
   filter(term=="N_init")
+listoftn<-c(2,0.3, 0.3, 11.7)
 backtogether<-data.frame()
 for(i in 1:4){
 subset_sp0<-N_init_fit_NB_fixed %>% 
@@ -36,7 +37,8 @@ subset_sp<-alldata %>%
   filter(Species==unique(alldata$Species)[i]) 
 
 subset_sp<-subset_sp%>% 
-  mutate(meaninit=subset_sp0$estimate)
+  mutate(meaninit=subset_sp0$estimate,
+         TN=listoftn[i])
 
 backtogether<-rbind(backtogether, subset_sp)
 }
@@ -45,6 +47,7 @@ alldata<-backtogether
 #fit model
 all_params_fit<-data.frame()
 all_preds_fit<-data.frame()
+
 for(i in 1:4){
   for(j in 1:6){
   data<-alldata %>% 
@@ -72,10 +75,14 @@ for(i in 1:4){
 
 write_csv(all_params_fit, "data-processed/indirect_umax_ks.csv")
 
-all_params_fit %>%
+
+indirect_umax_ks<-read_csv("data-processed/indirect_umax_ks.csv")
+
+indirect_umax_ks %>%
+  filter(term=="ks") %>%
   ggplot(aes(y=estimate, x=as.numeric(Temperature))) +
-    facet_grid(term~Species, scales="free_y") + geom_point() +
+    facet_grid(~Species, scales="free_y") + geom_point() +
     geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error, width=0))
-         
+ggsave("figures/ks_with_temp_indirect.pdf", width=8, height=2)  
 
 

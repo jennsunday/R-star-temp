@@ -70,7 +70,7 @@ for(k in 1:4){
   for(i in 1:length(newdata$Temperature)){
     Temperature<-newdata$Temperature[i] #for every half-degree from 1 to 50
     NB_fix<-function(N){
-    growth_rate<-a*exp(b*Temperature)*(1-((Temperature-z)/(w/2))^2) * N/(ks + N) - 0.1}
+    growth_rate<-(a*exp(b*Temperature)*(1-((Temperature-z)/(w/2))^2) * N/(ks + N)) - 0.1}
     thisroot<-try(uniroot(NB_fix, interval=c(0,200)), TRUE) #try taking the root
     roots_NB<-rbind(roots_NB, data.frame(root=ifelse(class(thisroot)!="try-error", thisroot$root, 200),
                                            Temperature=Temperature)) #add this to the output, setting root at a large number (200) if not within interval
@@ -128,7 +128,7 @@ for(k in 1:4){
     for(i in 1:length(newdata$Temperature)){
       Temperature<-newdata$Temperature[i] #for every half-degree from 1 to 50
       NB_BR<-function(N){
-         growth_rate<-a*exp(b*Temperature)*(1-((Temperature-z)/(w/2))^2) * N/(ks + N) - 0.1}
+         growth_rate<-(a*exp(b*Temperature)*(1-((Temperature-z)/(w/2))^2) * N/(ks + N)) - 0.1}
          thisroot<-try(uniroot(NB_BR, interval=c(0,200)), TRUE) #try taking the root
          roots_NB<-rbind(roots_NB, data.frame(root=ifelse(class(thisroot)!="try-error", thisroot$root, 200),
                                               Temperature=Temperature)) #add this to the output, setting root at a large number (200) if not within interval
@@ -181,7 +181,7 @@ ggsave("figures/umax_NB_fix_booted.pdf", width=8, height=2)
 #plot root
 all_roots_ks_umax %>%
   ggplot() + 
-  coord_cartesian(ylim = c(0, 10), xlim = c(0, 50)) +
+  coord_cartesian(ylim = c(0, 5), xlim = c(0, 50)) +
   theme_bw() + ylab("umax") + facet_grid(~Species) +
   geom_line(aes(x=Temperature, y=root, colour=as.factor(Species))) +
   geom_ribbon(data=all_boots_confint, aes(x=Temperature, ymin = root_lwr_CI, ymax = root_upr_CI), alpha = .1)

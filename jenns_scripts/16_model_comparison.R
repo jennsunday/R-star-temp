@@ -51,6 +51,10 @@ best_model_params_booted<-all_model_boot_confint %>%
 write_csv(best_model_params, "data-processed/best_model_params.csv")
 write_csv(best_model_params_booted, "data-processed/best_model_params_booted.csv")
 
+#write out results
+best_model_params<-read_csv("data-processed/best_model_params.csv")
+best_model_params_booted<-read_csv("data-processed/best_model_params_booted.csv")
+
 p1<-ggplot() + geom_line(data=best_model_params, aes(x=Temperature, y=root, colour=Species)) + 
   facet_grid(~Species) +
   coord_cartesian(ylim = c(0, 7), xlim=c(-1,50))  +
@@ -72,7 +76,7 @@ p2<-ggplot() + geom_line(data=best_model_params, aes(x=Temperature, y=umax, colo
   geom_errorbar(data=indirect_umax, aes(x=Temperature, ymin=estimate-std.error, 
                                         ymax=estimate+std.error, colour=Species, width=0))
 
-together<-grid.arrange(p1, p2, nrow = 2)
+together<-grid.arrange(p2, p1, nrow = 2)
 ggsave("figures/best_roots_and_umax.pdf", together, width=8, height=4)
 
 
@@ -128,6 +132,18 @@ indirect_r_fit<-rbind(read_csv("data-processed/indirect_r.csv") %>%
                         mutate(ks_type="var"))
 
 
+
+#display fits of Ks with tempeature to indirect parameter estimates from other scripts#####
+indirect_ks<-read_csv("data-processed/indirect_umax_ks.csv") %>% filter(term=="ks")
+all_roots_ks_umax_NB_var<-read_csv("data-processed/all_roots_ks_umax_NB_var.csv")
+
+all_roots_ks_umax_NB_var %>%
+  ggplot(aes(x=Temperature, y=ks)) + geom_line() +
+  facet_grid(~Species, scales="free_y") +
+  geom_point(data=indirect_ks, aes(y=estimate)) +
+  coord_cartesian(ylim = c(0, 20), xlim=c(5,35))
+
+
 growth_predicted_with_best_models<-predict_growth_NB %>%
   filter(ks_type=="var" & Species=="AC" |
            ks_type=="fixed" & Species=="CH"|
@@ -164,3 +180,48 @@ P2<-indirect_r_fit_best %>%
 
 together<-grid.arrange(P1, P2, nrow = 2)
 ggsave("figures/best_growth_fits.pdf", together, width=8, height=4)
+
+
+#plot predicted vs. observed for best fit models
+predict_density<-rbind(read_csv("data-processed/all_preds_fit_NB_fixed.csv") %>% 
+                           select(log.Particles.per.ml, day, N.Treatment, Temperature, Species, .fitted) %>%
+                           mutate(ks_type="fixed"),
+                       read_csv("data-processed/all_preds_fit_NB_var.csv") %>% 
+                               select(log.Particles.per.ml, day, N.Treatment, Temperature, Species, .fitted) %>%
+                           mutate(ks_type="var"))
+
+predict_density_with_best_models<-predict_density %>%
+  filter(ks_type=="var" & Species=="AC" |
+           ks_type=="fixed" & Species=="CH"|
+           ks_type=="fixed" & Species=="CS"|
+           ks_type=="var" & Species=="TT")
+
+predict_density_with_best_models %>%
+  ggplot(aes(y=log.Particles.per.ml, x=.fitted, col=as.factor(Temperature))) +
+  facet_grid(~Species, scales="free_y") + geom_point() +
+  labs(x="Cell density predicted from best-fit model", y="Cell density observed")
+ggsave("figures/model_fits.pdf", width=10, height=3)  
+
+#vis data fits over raw data - need to build a dataframe with predictions across time for each species
+TTN<-read_csv("data-processed/TTN.csv")
+CSN<-read_csv("data-processed/CSN.csv")
+CHN<-read_csv("data-processed/CHN.csv")
+ACN<-read_csv("data-processed/ACN.csv")
+
+TTfilteredN<-cbind(read_csv("data-processed/TTfilteredN.csv"), Species="TT")
+CSfilteredN<-cbind(read_csv("data-processed/CSfilteredN.csv"), Species="CS")
+CHfilteredN<-cbind(read_csv("data-processed/CHfilteredN.csv"), Species="CH")
+ACfilteredN<-cbind(read_csv("data-processed/ACfilteredN.csv"), Species="AC")
+
+library(cowplot)
+CS<-CSfilteredN %>%
+  ggplot(aes(y=log.Particles.per.ml, x=day))  +
+  facet_grid(Temperature~N.Treatment) +
+  geom_point(data=CSN, aes(y=log.Particles.per.ml), color=grey(0.3), alpha=0.5) +
+  geom_point() + labs(y="Log cell density", x="time, d") + 
+  ggtitle("CS") +
+  geom_line()
+ggsave("figures/CS_raw_data.pdf", width=8, height=7)  
+
+##abort for now, need to build a dataframe with predictions across time for each species
+

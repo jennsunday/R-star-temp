@@ -11,6 +11,7 @@ library(tidyr)
 library(nlstools)
 library(tidyverse)
 library(nls.multstart)
+library(cowplot)
 
 #read in data
 TTfilteredN<-cbind(read_csv("data-processed/TTfilteredN.csv"), Species="TT")
@@ -33,6 +34,9 @@ all_params_fit<-data.frame()
 all_summary_fit<-data.frame()
 all_preds_fit<-data.frame()
 all_roots_ks_umax<-data.frame()
+all_roots_ks_umax_ks5<-data.frame()
+all_roots_ks_umax_ks10<-data.frame()
+
 
 for(k in 1:4){
   data<-filter(alldata, Species==unique(alldata$Species)[k])
@@ -63,145 +67,86 @@ for(k in 1:4){
   b<-filter(params_fit, term=="b")$estimate
   z<-filter(params_fit, term=="z")$estimate
   w<-filter(params_fit, term=="w")$estimate
-  #ks<-filter(params_fit, term=="ks")$estimate
-  ks<-ifelse(filter(params_fit, term=="ks")$estimate<5.5, 8, filter(params_fit, term=="ks")$estimate)
+  ks<-filter(params_fit, term=="ks")$estimate
+  ks5<-5
+  ks10<-10
   tn<-filter(params_fit, term=="tn")$estimate
 
-
-  #get root for every temperature
+  #get root for every temperature for ks
   roots_NB<-data.frame() #make an empty dataframe - temporary
   temp_NB<-data.frame() #make an empty dataframe - temporary
   for(i in 1:length(newdata$Temperature)){
     Temperature<-newdata$Temperature[i] #for every half-degree from 1 to 50
     NB_fix<-function(N){
-    growth_rate<-(a*exp(b*Temperature)*(1-((Temperature-z)/(w/2))^2) * (N)/(ks + N)) - 0.1} # don't include tn so that actual root can be calculated
+      growth_rate_ks5<-(a*exp(b*Temperature)*(1-((Temperature-z)/(w/2))^2) * (N)/(ks + N))-0.1} # don't include tn so that actual root can be calculated
     thisroot<-try(uniroot(NB_fix, interval=c(0,200)), TRUE) #try taking the root
+    roots_NB<-rbind(roots_NB, data.frame(root=ifelse(class(thisroot)!="try-error", thisroot$root, 200),
+                                         Temperature=Temperature)) #add this to the output, setting root at a large number (200) if not within interval
+  }
+  roots_ks_umax<-mutate(roots_NB, umax=a*exp(b*newdata$Temperature)*(1-((newdata$Temperature-z)/(w/2))^2), 
+                        ks=ks, Species=unique(alldata$Species)[k])
+  all_roots_ks_umax<-rbind(all_roots_ks_umax, roots_ks_umax)
+  
+  #get root for every temperature for ks5
+  roots_NB<-data.frame() #make an empty dataframe - temporary
+  temp_NB<-data.frame() #make an empty dataframe - temporary
+  for(i in 1:length(newdata$Temperature)){
+    Temperature<-newdata$Temperature[i] #for every half-degree from 1 to 50
+    NB_fix_ks5<-function(N){
+    growth_rate<-(a*exp(b*Temperature)*(1-((Temperature-z)/(w/2))^2) * (N)/(ks5 + N))-0.1} # don't include tn so that actual root can be calculated
+    thisroot<-try(uniroot(NB_fix_ks5, interval=c(0,200)), TRUE) #try taking the root
     roots_NB<-rbind(roots_NB, data.frame(root=ifelse(class(thisroot)!="try-error", thisroot$root, 200),
                                            Temperature=Temperature)) #add this to the output, setting root at a large number (200) if not within interval
   }
-  roots_ks_umax<-mutate(roots_NB, umax=a*exp(b*newdata$Temperature)*(1-((newdata$Temperature-z)/(w/2))^2), 
-                ks=ks, Species=unique(alldata$Species)[k])
-  all_roots_ks_umax<-rbind(all_roots_ks_umax, roots_ks_umax)
-}
-
-#View(all_roots_ks_umax)
-#save outputs
-write_csv(all_roots_ks_umax, "data-processed/all_roots_ks_umax_NB_fixed.csv")
-write_csv(all_summary_fit, "data-processed/all_summary_fit_NB_fixed.csv")
-write_csv(all_params_fit, "data-processed/all_params_fit_NB_fixed.csv")
-write_csv(all_preds_fit, "data-processed/all_preds_fit_NB_fixed.csv")
-
-#bootstrap this ######
-all_params_boot<-data.frame()
-roots_ks_umax_boot<-data.frame()
-all_roots_ks_umax_boot<-data.frame()
-
-for(k in 1:4){
-  data<-filter(alldata, Species==unique(alldata$Species)[k])
-  fit_boots <- data %>% 
-    modelr::bootstrap(n = 20, id = 'boot_num') %>%
-    group_by(boot_num) %>%
-    mutate(fit = map(strap, ~nls_multstart(log.Particles.per.ml 
-                                           ~ N_init + (a*exp(b*Temperature)*(1-((Temperature-z)/(w/2))^2)) * ((N.Treatment + tn)/ (ks + N.Treatment + tn)) * day,
-                                           data= data.frame(.),  iter = 100,
-                                           start_lower = c(N_init=4, a = 0.1, b=0.0001, z=5, w=5, ks = 1, tn=-5),
-                                           start_upper = c(N_init=7, a = 0.6, b=0.2, z=40, w=40, ks = 15, tn=0),
-                                           supp_errors = 'Y',
-                                           convergence_count = 100,
-                                           na.action = na.omit,
-                                           lower=c(N_init=0, a = 0, b=0, z=-20, w=0, ks = 0, tn=-50),
-                                           upper=c(N_init=15, a = 10, b=10, z=500, w=500, ks = 90, tn=50))
-   ))
-
-  # get parameters ####
-  params_boot <- fit_boots %>%
-   unnest(fit %>% map(tidy)) %>%
-   ungroup() %>%
-   mutate(Species=unique(alldata$Species)[k])
-
-  all_params_boot<-rbind(all_params_boot, params_boot)
-
-  #get umax, ks, and root for every bootstrap
-  roots_boot<-data.frame() #make an empty dataframe
-  umax_ks_boot<-data.frame() #make an empty dataframe
-
-  for (j in unique(params_boot$boot_num)){ #for each boot
-    a<-filter(params_boot, boot_num==j & term=="a")$estimate
-    b<-filter(params_boot, boot_num==j & term=="b")$estimate
-    z<-filter(params_boot, boot_num==j &  term=="z")$estimate
-    w<-filter(params_boot, boot_num==j & term=="w")$estimate
-    ks<-filter(params_boot, boot_num==j &  term=="ks")$estimate
-    tn<-filter(params_boot, boot_num==j &  term=="tn")$estimate
-
-    roots_NB<-data.frame() #make an empty dataframe
+  roots_ks_umax_ks5<-mutate(roots_NB, umax=a*exp(b*newdata$Temperature)*(1-((newdata$Temperature-z)/(w/2))^2), 
+                ks=ks5, Species=unique(alldata$Species)[k])
+  all_roots_ks_umax_ks5<-rbind(all_roots_ks_umax_ks5, roots_ks_umax_ks5)
   
-    for(i in 1:length(newdata$Temperature)){
-      Temperature<-newdata$Temperature[i] #for every half-degree from 1 to 50
-      NB_BR<-function(N){
-         growth_rate<-a*exp(b*Temperature)*(1-((Temperature-z)/(w/2))^2) * N/(ks + N) - 0.1} # don't include tn so that actual root can be calculated
-         thisroot<-try(uniroot(NB_BR, interval=c(0,200)), TRUE) #try taking the root
-         roots_NB<-rbind(roots_NB, data.frame(root=ifelse(class(thisroot)!="try-error", thisroot$root, 200),
-                                              Temperature=Temperature)) #add this to the output, setting root at a large number (200) if not within interval
-      }
-    roots_ks_umax_temp<-mutate(roots_NB, boot_num=j, 
-                               umax=a*exp(b*newdata$Temperature)*(1-((newdata$Temperature-z)/(w/2))^2), 
-                               ks=ks, Species=unique(alldata$Species)[k]) #roots, ks, and umax from one boot
-    roots_ks_umax_boot<-rbind(roots_ks_umax_boot, roots_ks_umax_temp) #store all the boots together
+  #get root for every temperature for ks10
+  roots_NB<-data.frame() #make an empty dataframe - temporary
+  temp_NB<-data.frame() #make an empty dataframe - temporary
+  for(i in 1:length(newdata$Temperature)){
+    Temperature<-newdata$Temperature[i] #for every half-degree from 1 to 50
+    NB_fix_ks10<-function(N){
+      growth_rate<-(a*exp(b*Temperature)*(1-((Temperature-z)/(w/2))^2) * (N)/(ks10 + N))-0.1} # don't include tn so that actual root can be calculated
+    thisroot<-try(uniroot(NB_fix_ks10, interval=c(0,200)), TRUE) #try taking the root
+    roots_NB<-rbind(roots_NB, data.frame(root=ifelse(class(thisroot)!="try-error", thisroot$root, 200),
+                                         Temperature=Temperature)) #add this to the output, setting root at a large number (200) if not within interval
   }
-  
-all_roots_ks_umax_boot<-rbind(all_roots_ks_umax_boot, roots_ks_umax_boot)
+roots_ks_umax_ks10<-mutate(roots_NB, umax=a*exp(b*newdata$Temperature)*(1-((newdata$Temperature-z)/(w/2))^2), 
+                            ks=ks10, Species=unique(alldata$Species)[k])
+all_roots_ks_umax_ks10<-rbind(all_roots_ks_umax_ks10, roots_ks_umax_ks10)
 }
-
-#View(all_roots_ks_umax_boot)
-
-#save outputs
-write_csv(all_roots_ks_umax_boot, "data-processed/all_roots_ks_umax_boot_NB_fixed.csv")
-
-
-#read in outputs
-all_roots_ks_umax_boot<-read_csv("data-processed/all_roots_ks_umax_boot_NB_fixed.csv")
-all_roots_ks_umax<-read_csv("data-processed/all_roots_ks_umax_NB_fixed.csv")
-View(all_params_boot)
-#get the confidence intervals
-all_boots_confint<-all_roots_ks_umax_boot %>%
-  group_by(Temperature, Species) %>%
-  summarise(umax_lwr_CI = quantile(umax, 0.025),
-            umax_upr_CI = quantile(umax, 0.975),
-            root_lwr_CI = quantile(root, 0.025),
-            root_upr_CI = quantile(root, 0.975),
-            ks_lwr_CI = quantile(ks, 0.025),
-            ks_upr_CI = quantile(ks, 0.975)
-            ) %>%
-  ungroup()
-
-
-write_csv(all_boots_confint, "data-processed/all_boots_confint_NB_fixed")
-
-#plot umax
-all_roots_ks_umax %>%
-  ggplot() +
-  coord_cartesian(ylim = c(0, 2), xlim = c(0, 50)) +
-  theme_bw() + ylab("umax") + facet_grid(~Species) +
-  geom_line(aes(x=Temperature, y=umax, colour=as.factor(Species))) + 
-  geom_ribbon(data=all_boots_confint, aes(x=Temperature, ymin = umax_lwr_CI, ymax = umax_upr_CI), alpha = .1)
-ggsave("figures/umax_NB_fix_booted.pdf", width=8, height=2)
 
 #plot root
 all_roots_ks_umax %>%
-  ggplot() + 
+  ggplot(aes(x=Temperature, y=root, colour=as.factor(Species))) + 
   coord_cartesian(ylim = c(0, 10), xlim = c(0, 50)) +
   theme_bw() + ylab("umax") + facet_grid(~Species) +
-  geom_line(aes(x=Temperature, y=root, colour=as.factor(Species))) +
-  geom_ribbon(data=all_boots_confint, aes(x=Temperature, ymin = root_lwr_CI, ymax = root_upr_CI), alpha = .1)
-ggsave("figures/root_NB_fix_booted.pdf", width=8, height=2)
+  geom_line() + 
+  geom_line(data=all_roots_ks_umax_ks5, lty=2) +
+  geom_line(data=all_roots_ks_umax_ks10, lty=3)
+ggsave("figures/root_for_3_ks.pdf", width=8, height=2)  
 
+ggplot(rstar_by_temp_sum, aes(x = temp, y = mean, color=as.factor(Species))) + 
+  geom_point() +
+  theme_bw() + facet_grid(~Species) +
+  geom_errorbar(aes(ymin = mean - error, ymax = mean + error), width=0.2) +
+  ylab("R-star (uM)") +
+  coord_cartesian(ylim = c(0, 10), xlim = c(0, 50)) +
+  geom_line(data=all_roots_ks_umax, aes(x=Temperature, y=root, colour=as.factor(Species)), inherit.aes = FALSE) +
+  geom_line(data=all_roots_ks_umax_ks5, aes(x=Temperature, y=root, colour=as.factor(Species)), inherit.aes = FALSE) +
+  geom_line(data=all_roots_ks_umax_ks10, aes(x=Temperature, y=root, colour=as.factor(Species)), inherit.aes = FALSE) 
+
+ggsave("figures/root_NB_fix_booted.pdf", width=8, height=2)
+View(all_roots_ks_umax_ks7)
 all_preds_fit %>%
   ggplot(aes(x=log.Particles.per.ml, y=.fitted)) + 
   geom_point() +
   facet_grid(~Species)
 
 
- ####################################
+####################################
 #fitting NB to cell density
 #exponential relationship between k and temperature
 ####################################
@@ -262,10 +207,6 @@ for(k in 1:4){
 write_csv(all_roots_ks_umax, "data-processed/all_roots_ks_umax_NB_var.csv")
 write_csv(all_summary_fit, "data-processed/all_summary_fit_NB_var.csv")
 write_csv(all_params_fit, "data-processed/all_params_fit_NB_var.csv")
-write_csv(all_preds_fit, "data-processed/all_preds_fit_NB_var.csv")
-
-read_csv("data-processed/all_params_fit_NB_var.csv") %>%
-  filter(term=="tn")
 #View(all_roots_ks_umax)
 #View(all_params_fit)
 

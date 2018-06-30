@@ -64,6 +64,14 @@ rstar_by_temp<-read_csv("data-processed/rstar_by_temp.csv") %>%
   filter(term=="a")%>%
   mutate(draw_down=4.4-estimate)
 
+
+#anova
+head(rstar_by_temp)
+test<-lm(estimate~as.factor(temp), data=filter(rstar_by_temp, Species=="TT"))
+aov.test<-aov(estimate~as.factor(temp), data=filter(rstar_by_temp, Species=="TT"))
+testmore<-TukeyHSD(aov.test)
+
+
 rstar_by_temp %>% 
   #filter(!temp==38 | !Species=="TT")%>%
   #filter(!temp==38 | !Species=="CS")%>%
@@ -79,10 +87,9 @@ rstar_by_temp_sum<-rstar_by_temp %>%
 
 P1<-rstar_by_temp_sum %>% 
   ggplot(aes(x = temp, y = mean, color=as.factor(Species))) + geom_point() +
-  theme_bw() + facet_grid(~Species) +
+  theme_bw() + facet_grid(~Species) + geom_smooth() +
   geom_errorbar(aes(ymin = mean - error, ymax = mean + error), width=0.2) +
   ylab("R-star (uM)")
-
 
 
 #read in cell results to display together
@@ -95,47 +102,11 @@ cell_results_sum<-cell_results %>%
 
 P2<-cell_results_sum %>%
   ggplot(aes(x = temp, y = mean, color=as.factor(Species))) + geom_point() +
-  theme_bw() + facet_grid(~Species) +
+  theme_bw() + facet_grid(~Species) + geom_smooth() +
   geom_errorbar(aes(ymin = mean - error, ymax = mean + error), width=0.2) +
   ylab("r (d-1)")
 
-together<-grid.arrange(P1, P2, nrow = 2)
+together<-grid.arrange(P2, P1, nrow = 2)
 ggsave("figures/2017_direct_estimates.pdf", together, width=8, height=4)
 
 
-#attempt to show prediction with data
-
-#read in model predictions
-best_model_params<-read_csv("data-processed/best_model_params.csv")
-best_model_params_booted<-read_csv("data-processed/best_model_params_booted.csv")
-
-minRobs<-rstar_by_temp_sum %>%
-  group_by(Species) %>%
-  summarize(minR=min(mean))
-
-best_model_params_w_offset<-data.frame()
-for (i in unique(best_model_params$Species)){
-temp<-best_model_params %>%
-  filter(Species==i)  %>%
-  mutate(offset=filter(minRobs, Species == i)$minR-min(root))
-best_model_params_w_offset<-rbind(best_model_params_w_offset, temp)
-}
-
-best_model_params_booted_w_offset<-data.frame()
-for (i in unique(best_model_params_booted$Species)){
-  temp<-best_model_params_booted %>%
-    filter(Species==i)  %>%
-    mutate(offset=filter(best_model_params_w_offset, Species == i)$offset[1])
-  best_model_params_booted_w_offset<-rbind(best_model_params_booted_w_offset, temp)
-}
-
-ggplot() + geom_point(data=rstar_by_temp_sum, aes(x = temp, y = mean, color=as.factor(Species))) +
-  theme_bw() + facet_grid(~Species) +  
-  geom_errorbar(data=rstar_by_temp_sum, aes(x = temp, ymin = mean - error, ymax = mean + error, color=as.factor(Species)), width=0.2) +
-    ylab("R-star (uM)") +
-  #geom_line(data=best_model_params_w_offset, aes(x=Temperature, y=root+offset, colour=Species)) + 
-  coord_cartesian(ylim = c(1, 5), xlim=c(-1,50)) + 
-  geom_ribbon(data=best_model_params_booted_w_offset, 
-              aes(x=Temperature, ymin = root_lwr_CI+offset, ymax = root_upr_CI+offset), alpha = .1)
-
-best_model_params_booted_w_offset$offset

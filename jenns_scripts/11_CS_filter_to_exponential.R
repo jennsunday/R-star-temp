@@ -104,11 +104,18 @@ CSfilteredN <- CSfiltered %>%
 
 
 write_csv(CSfilteredN,"data-processed/CSfilteredN.csv")
+write_csv(CSN,"data-processed/CSN.csv")
 
+CSN<-read_csv("data-processed/CSN.csv")
+CSfilteredN<-read_csv("data-processed/CSfilteredN.csv")
 
 #Vis linear model over raw data
+library(cowplot)
 CSfilteredN %>%
   ggplot(aes(y=log.Particles.per.ml, x=day))  +
   facet_grid(Temperature~N.Treatment) +
   stat_smooth(method=lm) +
-  geom_point(data=CSN, color="red", alpha=0.5) + geom_point()
+  geom_point(data=TTN, aes(y=log.Particles.per.ml), color=grey(0.3), alpha=0.5) +
+  geom_point() + labs(y="Log cell density", x="time, d") + 
+  ggtitle("CS")
+ggsave("figures/CS_raw_data.pdf", width=8, height=7)  

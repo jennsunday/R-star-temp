@@ -98,13 +98,19 @@ TTfilteredN<- TTfiltered %>%
   mutate(N.Treatment = as.numeric(N.Treatment))
 
 write_csv(TTfilteredN,"data-processed/TTfilteredN.csv")
+write_csv(TTN,"data-processed/TTN.csv")
+TTN<-read_csv("data-processed/TTN.csv")
+TTfilteredN<-read_csv("data-processed/TTfilteredN.csv")
 
 
 #Vis linear model over raw data
+library(cowplot)
+
 TTfilteredN %>%
   ggplot(aes(y=log.Particles.per.ml, x=day))  +
   facet_grid(Temperature~N.Treatment) +
   stat_smooth(method=lm) +
-  geom_point(data=TTN, aes(y=log.Particles.per.ml), color="red", alpha=0.5) +
-  geom_point()
-
+  geom_point(data=TTN, aes(y=log.Particles.per.ml), color=grey(0.3), alpha=0.5) +
+  geom_point() + labs(y="Log cell density", x="time, d") + 
+  ggtitle("TT")
+ggsave("figures/TT_raw_data.pdf", width=8, height=7)  
