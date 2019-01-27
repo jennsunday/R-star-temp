@@ -8,6 +8,12 @@ library(tidyverse)
 
 rdata_raw <- read_csv("data-processed/logistic_growth_fits_r-star.csv")
 
+
+rdata_raw %>% 
+  ggplot(aes(x = temp, y = K, color = species)) + geom_point() +
+  facet_wrap( ~ species)
+
+
 dat.full <- rdata_raw %>% 
 	rename(curve.id = species,
 				 growth.rate = r, 
